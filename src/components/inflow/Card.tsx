@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { MessageCircle, ExternalLink, Mail, Github, Twitter, Slack, FileText, Trello, Figma } from 'lucide-react';
+import { MessageCircle, Mail, Github, Twitter, Slack, FileText, Trello, Figma } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CardData, ReactionType, SourcePlatform } from './types';
 import { getCardArt } from './CardArt';
@@ -220,7 +220,7 @@ export function Card({
         }`} 
       />
 
-      <div className="absolute inset-0 z-20 p-6 flex flex-col justify-between pointer-events-none">
+      <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between pointer-events-none">
         {/* Content area with 3D transform */}
         <div style={{ transform: "translateZ(20px)" }} className="flex flex-col h-full pointer-events-none">
           {/* Top Section - Agent Byline */}
@@ -254,11 +254,11 @@ export function Card({
                   </Avatar>
                 )}
                 
-                <span className="font-mono text-[10px] uppercase tracking-wider font-medium flex items-center gap-1">
-                  Via {data.agent.displayName || data.agent.name}
+                <span className="font-mono text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 max-w-[120px]">
+                  <span className="truncate">{data.agent.displayName || data.agent.name}</span>
                   {/* Dynamic icon to indicate real-time nature */}
                   {data.agent.type !== 'human-post' && (
-                    <span className="animate-pulse">✨</span>
+                    <span className="animate-pulse flex-shrink-0">✨</span>
                   )}
                 </span>
               </div>
@@ -270,139 +270,111 @@ export function Card({
             <motion.h3
               layoutId={`card-title-${data.id}`}
               transition={cardTransition}
-              className={`font-bold tracking-tight leading-tight mb-2 text-stone-900 ${
-                data.size === '2x2' ? 'text-2xl md:text-3xl' : 'text-lg'
+              className={`font-bold tracking-tight leading-tight mb-1.5 text-stone-900 ${
+                data.size === '2x2' ? 'text-xl md:text-2xl' : 'text-base md:text-lg'
               }`}
             >
               {highlightMentions(data.title, data.mentions, currentUserId)}
             </motion.h3>
 
             {data.size !== '1x1' && (
-              <p className="text-sm line-clamp-2 leading-relaxed text-stone-600 font-medium">
+              <p className="text-xs md:text-sm line-clamp-2 leading-relaxed text-stone-600 font-medium">
                 {highlightMentions(data.summary, data.mentions, currentUserId)}
               </p>
-            )}
-
-            {/* Related Documents */}
-            {data.relatedDocs && data.relatedDocs.length > 0 && (
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                {data.relatedDocs.map((doc) => (
-                  <span
-                    key={doc.id}
-                    className="text-xs text-stone-500 hover:text-stone-700 flex items-center gap-1"
-                  >
-                    🔗 {doc.name}
-                  </span>
-                ))}
-              </div>
             )}
           </div>
 
           {/* Bottom Section - Time & Interactions */}
-          <div className="flex flex-col gap-2 mt-auto pt-2 pointer-events-auto">
-          {/* Metadata Footer - Source Count */}
-          {data.sourceCount && getSourceText() && (
-            <div className="text-[10px] text-stone-400 font-mono">
-              {getSourceText()}
-            </div>
-          )}
+          <div className="flex flex-col gap-1.5 mt-auto pt-1 pointer-events-auto">
+            {/* First row - Source Count (icon + badge format) */}
+            {data.sourceCount && SourceIcon && (
+              <div className="flex items-center gap-1.5 text-[10px] text-stone-400">
+                <SourceIcon size={12} />
+                <span className="font-mono">{data.sourceCount}</span>
+              </div>
+            )}
 
-          <div className="flex items-center justify-between">
-            {/* Left side - Source Platform (on hover) */}
-            <div className="flex-1">
-              {isHovered && SourceIcon && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors"
-                  title={`View on ${data.sourcePlatform}`}
-                >
-                  <SourceIcon size={12} />
-                  <ExternalLink size={10} />
-                </motion.div>
-              )}
-            </div>
-
-            {/* Right side - Time & Interactions */}
-            <div className="flex items-center gap-3 text-stone-500">
-              {/* Time */}
+            {/* Second row - Time & Interactions */}
+            <div className="flex items-center justify-between">
+              {/* Left side - Time */}
               <span className="text-xs text-stone-400">
                 {data.timeAgo}
               </span>
 
-              {/* Reactions - Clickable for quick reaction */}
-              {hasReactions && (
-                <div className="flex items-center gap-1">
-                  {Object.entries(reactionCounts)
-                    .sort(([, a], [, b]) => b - a)
-                    .slice(0, 2)
-                    .map(([type, count]) => {
-                      const userReacted = reactions.some(
-                        r => r.type === type && r.userId === currentUserId
-                      );
-                      
-                      return (
-                        <motion.button
-                          key={type}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            userReacted 
-                              ? handleReactionRemove(type as ReactionType)
-                              : handleReactionAdd(type as ReactionType);
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`
-                            text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded-md
-                            transition-all cursor-pointer
-                            ${userReacted 
-                              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
-                              : 'hover:bg-stone-100'
-                            }
-                          `}
-                          title={userReacted ? 'Remove reaction' : 'Add reaction'}
-                        >
-                          <span>{type}</span>
-                          <span className={userReacted ? 'text-orange-600' : 'text-stone-400'}>
-                            {count}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
+              {/* Right side - Interaction info + hover actions */}
+              <div className="flex items-center gap-3">
+                {/* Reactions - Always visible, clickable to toggle */}
+                {hasReactions && (
+                  <div className="flex items-center gap-1">
+                    {Object.entries(reactionCounts)
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 2)
+                      .map(([type, count]) => {
+                        const userReacted = reactions.some(
+                          r => r.type === type && r.userId === currentUserId
+                        );
+                        
+                        return (
+                          <motion.button
+                            key={type}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              userReacted 
+                                ? handleReactionRemove(type as ReactionType)
+                                : handleReactionAdd(type as ReactionType);
+                            }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`
+                              text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded-md
+                              transition-all cursor-pointer
+                              ${userReacted 
+                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                                : 'hover:bg-stone-100'
+                              }
+                            `}
+                            title={userReacted ? 'Remove reaction' : 'Add reaction'}
+                          >
+                            <span>{type}</span>
+                            <span className={userReacted ? 'text-orange-600' : 'text-stone-400'}>
+                              {count}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {/* Comments count - Always visible */}
+                {hasComments && (
+                  <span className="text-xs flex items-center gap-1 text-stone-400">
+                    <MessageCircle size={12} />
+                    {data.commentsList?.length || data.comments || 0}
+                  </span>
+                )}
+
+                {/* Action buttons - Visible on hover */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5">
+                  <ReactionPicker
+                    reactions={reactions}
+                    currentUserId={currentUserId}
+                    onReactionAdd={handleReactionAdd}
+                    onReactionRemove={handleReactionRemove}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCommentDialogOpen(true);
+                    }}
+                    className="p-1 hover:bg-stone-100 rounded-full transition-colors"
+                    title="Add comment"
+                  >
+                    <MessageCircle size={14} className="text-stone-400 hover:text-stone-600" />
+                  </button>
                 </div>
-              )}
-
-              {/* Comments count */}
-              {hasComments && (
-                <span className="text-xs flex items-center gap-1 text-stone-400">
-                  <MessageCircle size={12} />
-                  {data.commentsList?.length || data.comments || 0}
-                </span>
-              )}
-
-              {/* Interaction buttons - Show on hover, separate z-index context */}
-              <div className="relative z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5">
-                <ReactionPicker
-                  reactions={reactions}
-                  currentUserId={currentUserId}
-                  onReactionAdd={handleReactionAdd}
-                  onReactionRemove={handleReactionRemove}
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCommentDialogOpen(true);
-                  }}
-                  className="p-1 hover:bg-stone-100 rounded-full transition-colors"
-                  title="Add comment"
-                >
-                  <MessageCircle size={14} className="text-stone-400 hover:text-stone-600" />
-                </button>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 

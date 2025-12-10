@@ -1,4 +1,5 @@
 import { MainLayout } from "./components/layout/MainLayout";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Workbench from "./pages/Workbench";
 import Agents from "./pages/Agents";
@@ -7,6 +8,10 @@ import NotFound from "./pages/NotFound";
 export const routers = [
     {
       path: "/",
+      element: <Landing />,
+    },
+    {
+      path: "/app",
       element: <MainLayout />,
       children: [
         {

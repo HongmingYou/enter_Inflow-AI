@@ -144,9 +144,16 @@ export default function Dashboard() {
                 <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                 {format(new Date(), 'EEEE, MMMM d, yyyy', { locale: zhCN })}
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold tracking-tighter text-stone-900">
-                InFlow.
-              </h1>
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="InFlow" 
+                  className="h-12 w-12 md:h-14 md:w-14"
+                />
+                <h1 className="text-5xl md:text-6xl font-bold tracking-tighter text-stone-900">
+                  InFlow.
+                </h1>
+              </div>
             </div>
 
             {/* Dynamic AI Status */}
@@ -189,7 +196,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="px-6 py-12 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 auto-rows-[240px] gap-5 grid-flow-row-dense">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 auto-rows-[180px] gap-4 grid-flow-row-dense">
           <AnimatePresence mode="popLayout">
             {filteredCards.map((card) => (
               <Card

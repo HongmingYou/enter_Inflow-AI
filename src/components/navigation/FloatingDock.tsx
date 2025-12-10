@@ -22,19 +22,19 @@ const navItems: NavItem[] = [
     id: 'dashboard',
     label: '首页',
     icon: Home,
-    path: '/dashboard',
+    path: '/app/dashboard',
   },
   {
     id: 'workbench',
     label: '工作台',
     icon: Sparkles,
-    path: '/workbench',
+    path: '/app/workbench',
   },
   {
     id: 'agents',
     label: '雇佣 Agent',
     icon: Bot,
-    path: '/agents',
+    path: '/app/agents',
     isSpecial: true,
   },
 ];
@@ -43,8 +43,8 @@ export function FloatingDock() {
   const location = useLocation();
   
   const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/' || location.pathname === '/dashboard';
+    if (path === '/app/dashboard') {
+      return location.pathname === '/app' || location.pathname === '/app/dashboard';
     }
     return location.pathname.startsWith(path);
   };
@@ -57,52 +57,26 @@ export function FloatingDock() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="w-[72px] flex flex-col items-center py-6 bg-white/60 backdrop-blur-xl border border-white/30 rounded-[24px] shadow-xl shadow-orange-500/5">
+          <div className="w-[72px] h-full flex flex-col items-center py-4 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[20px] shadow-xl shadow-orange-500/5">
             {/* Top - Brand Logo */}
-            <div className="flex flex-col items-center mb-6">
-              <Link to="/dashboard" className="group">
+            <div className="flex flex-col items-center mb-4">
+              <Link to="/app/dashboard" className="group">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-10 h-10 flex items-center justify-center"
                 >
-                  {/* Refined Logo: Simple brand graphic */}
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-orange-500"
-                  >
-                    <path
-                      d="M12 2L2 7L12 12L22 7L12 2Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M2 17L12 22L22 17"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M2 12L12 17L22 12"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <img 
+                    src="/logo.png" 
+                    alt="InFlow" 
+                    className="w-full h-full object-contain"
+                  />
                 </motion.div>
               </Link>
             </div>
 
             {/* Middle - Core Navigation */}
-            <div className="flex flex-col items-center gap-3 w-full px-3">
+            <div className="flex flex-col items-center gap-2.5 w-full px-3 flex-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -112,24 +86,30 @@ export function FloatingDock() {
                     <TooltipTrigger asChild>
                       <Link to={item.path} className="w-full flex justify-center">
                         <motion.div
-                          whileHover={{ scale: 1.05 }}
+                          whileHover={{ scale: 1.05, y: -2 }}
                           whileTap={{ scale: 0.95 }}
                           className={`
-                            relative group flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200
-                            ${active ? 'bg-gray-100/50' : 'hover:bg-gray-50/50'}
+                            relative group flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200
+                            ${active 
+                              ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 shadow-sm shadow-orange-200/50' 
+                              : 'hover:bg-gray-50/50'
+                            }
                           `}
                         >
                           <Icon 
-                            size={24} 
+                            size={22} 
                             className={`
                               transition-colors duration-200
-                              ${active ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'}
-                              ${item.isSpecial && !active ? 'text-orange-500/80 drop-shadow-sm' : ''}
+                              ${active ? 'text-orange-600' : 'text-gray-400 group-hover:text-gray-600'}
                             `}
                           />
-                          {/* Special Glow for Hire Agent if desired */}
-                          {item.isSpecial && (
-                            <div className="absolute inset-0 bg-orange-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {/* Active indicator */}
+                          {active && (
+                            <motion.div
+                              layoutId="activeIndicator"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-500 rounded-r-full"
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            />
                           )}
                         </motion.div>
                       </Link>
@@ -147,20 +127,17 @@ export function FloatingDock() {
               })}
             </div>
 
-            {/* Spacer - Separator between Core and Utilities */}
-            <div className="h-24 w-full" />
-
             {/* Bottom - Utilities & User */}
-            <div className="flex flex-col items-center gap-3 w-full px-3">
+            <div className="flex flex-col items-center gap-2.5 w-full px-3 mt-auto">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50/50 transition-all relative"
+                    className="w-11 h-11 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50/50 transition-all relative"
                   >
-                    <Bell size={22} />
-                    <span className="absolute top-3 right-3 w-2 h-2 bg-orange-500 rounded-full border-2 border-white" />
+                    <Bell size={20} />
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-orange-500 rounded-full border-2 border-white animate-pulse" />
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent 
@@ -176,11 +153,11 @@ export function FloatingDock() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50/50 transition-all"
+                    className="w-11 h-11 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50/50 transition-all"
                   >
-                    <Settings size={22} />
+                    <Settings size={20} />
                   </motion.button>
                 </TooltipTrigger>
                 <TooltipContent 
@@ -193,16 +170,16 @@ export function FloatingDock() {
                 </TooltipContent>
               </Tooltip>
 
-              <div className="w-8 h-px bg-gray-200/50 my-1" />
+              <div className="w-8 h-px bg-gradient-to-r from-transparent via-gray-200/50 to-transparent my-1" />
 
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-1"
+                    className="p-0.5"
                   >
-                    <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
+                    <Avatar className="h-9 w-9 border-2 border-orange-200 shadow-md hover:shadow-lg transition-shadow">
                       <AvatarImage src="" alt="User" />
                       <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700">
                         JY

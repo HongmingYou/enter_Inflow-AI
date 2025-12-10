@@ -36,7 +36,7 @@ export const IntelligenceArt = () => (
   <div className="absolute inset-0 bg-[#F5F5F0] overflow-hidden">
     <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
     <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:100%_24px]" />
-    <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent animate-scan" />
+    <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent" />
     <div className="absolute bottom-6 left-6 border border-orange-800/20 bg-orange-50/50 px-2 py-1 rounded text-[10px] text-orange-800/60 font-mono tracking-widest uppercase">
       Confidential
     </div>
