@@ -25,10 +25,10 @@ const navItems: NavItem[] = [
     path: '/app/dashboard',
   },
   {
-    id: 'workbench',
+    id: 'workspace',
     label: '工作台',
     icon: Sparkles,
-    path: '/app/workbench',
+    path: '/app/workspace',
   },
   {
     id: 'agents',

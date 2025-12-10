@@ -6,6 +6,8 @@ import { zhCN } from 'date-fns/locale/zh-CN';
 import { Card } from '@/components/inflow/Card';
 import { ExpandedCard } from '@/components/inflow/ExpandedCard';
 import { FilterBar } from '@/components/inflow/FilterBar';
+import { SearchCard } from '@/components/inflow/SearchCard';
+import { SearchModal } from '@/components/inflow/SearchModal';
 import { MOCK_DATA } from '@/components/inflow/data';
 import { CardData, ReactionType, Reaction, Comment, CategoryType, SourcePlatform } from '@/components/inflow/types';
 
@@ -19,6 +21,9 @@ export default function Dashboard() {
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('all');
   const [selectedSource, setSelectedSource] = useState<SourcePlatform | 'all'>('all');
+  
+  // Search modal state
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // Merge MOCK_DATA with interactions
   const cardsWithInteractions = useMemo(() => {
@@ -57,10 +62,24 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => e.key === 'Escape' && setSelectedId(null);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isSearchOpen) {
+          setIsSearchOpen(false);
+        } else {
+          setSelectedId(null);
+        }
+      }
+    };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
+  }, [isSearchOpen]);
+
+  // Handle search card selection
+  const handleSearchCardSelect = (cardId: number) => {
+    setSelectedId(cardId);
+    setIsSearchOpen(false);
+  };
 
   // Handle reaction add
   const handleReactionAdd = (cardId: number, reactionType: ReactionType) => {
@@ -197,6 +216,14 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="px-6 py-12 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 auto-rows-[180px] gap-4 grid-flow-row-dense">
+          {/* Search Card - Positioned at top-right */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-start-5 xl:col-span-2 row-span-1">
+            <SearchCard 
+              onClick={() => setIsSearchOpen(true)} 
+              isActive={isSearchOpen}
+            />
+          </div>
+          
           <AnimatePresence mode="popLayout">
             {filteredCards.map((card) => (
               <Card
@@ -213,6 +240,14 @@ export default function Dashboard() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Search Modal */}
+      <SearchModal
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        cards={cardsWithInteractions}
+        onCardSelect={handleSearchCardSelect}
+      />
 
       {/* Expanded Card Modal */}
       <AnimatePresence>

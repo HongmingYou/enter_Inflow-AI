@@ -165,7 +165,56 @@ const Hero = () => {
         </h1>
         
         <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-          While Agents monitor your SaaS tools to filter out the 99% noise, your team converges in the Workspace to act on the 1% signal—together, in deep context.
+          While Agents handle your SaaS tools to{' '}
+          <motion.span
+            className="relative inline-block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <span className="relative z-10 px-2 py-0.5 text-[#1A1A1A] font-medium">
+              filter out the 99% noise
+            </span>
+            <motion.span
+              className="absolute inset-0 bg-gradient-to-r from-orange-200/40 via-yellow-100/50 to-orange-200/40 rounded-sm"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+              style={{ transformOrigin: "left" }}
+            />
+            <motion.span
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6B00]/60 to-transparent rounded-full"
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.4, ease: "easeOut" }}
+            />
+          </motion.span>
+          <br />
+          Your team converges in the Workspace to act on the 1% signal<br />
+          <motion.span
+            className="relative inline-block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            <span className="relative z-10 px-2 py-0.5 text-[#1A1A1A] font-medium">
+              Let info flows. Get in flow.
+            </span>
+            <motion.span
+              className="absolute inset-0 bg-gradient-to-r from-orange-200/40 via-yellow-100/50 to-orange-200/40 rounded-sm"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
+              style={{ transformOrigin: "left" }}
+            />
+            <motion.span
+              className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6B00]/60 to-transparent rounded-full"
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.4, ease: "easeOut" }}
+            />
+          </motion.span>
+          .
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">

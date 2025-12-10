@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { X, Fingerprint, ArrowUpRight, Sparkles } from 'lucide-react';
 import { CardData } from './types';
@@ -20,6 +21,7 @@ const layoutTransition = {
 };
 
 export function ExpandedCard({ selectedItem, setSelectedId }: ExpandedCardProps) {
+  const navigate = useNavigate();
   const [showChat, setShowChat] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -30,6 +32,12 @@ export function ExpandedCard({ selectedItem, setSelectedId }: ExpandedCardProps)
     setTimeout(() => {
       setSelectedId(null);
     }, 50);
+  };
+
+  const handleOpenContext = () => {
+    // Navigate to Studio with card context
+    navigate(`/app/workspace/new?card_id=${selectedItem.id}&msg_id=last`);
+    setSelectedId(null);
   };
 
   return (
@@ -150,7 +158,10 @@ export function ExpandedCard({ selectedItem, setSelectedId }: ExpandedCardProps)
                         <Sparkles size={16} className="text-orange-500" />
                         Ask Agent
                       </button>
-                      <button className="flex-1 sm:flex-none py-2.5 px-4 rounded-lg bg-stone-900 text-white hover:bg-stone-800 text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-stone-200">
+                      <button 
+                        onClick={handleOpenContext}
+                        className="flex-1 sm:flex-none py-2.5 px-4 rounded-lg bg-stone-900 text-white hover:bg-stone-800 text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-stone-200"
+                      >
                         Open Context
                         <ArrowUpRight size={16} />
                       </button>

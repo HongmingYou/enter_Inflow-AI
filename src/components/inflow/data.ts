@@ -1,22 +1,50 @@
 import { CardData } from './types';
 
+// 统一的 Agent 配置
+const AGENT_CONFIG = {
+  'email-monitor': {
+    name: 'Inbox Assistant',
+    displayName: 'Inbox Assistant',
+    icon: 'Mail',
+    color: 'bg-amber-100 text-amber-700',
+    emoji: '📧',
+    description: '监控用户反馈邮箱'
+  },
+  'social-monitor': {
+    name: 'Brand Watcher',
+    displayName: 'Brand Watcher',
+    icon: 'MessageSquare',
+    color: 'bg-purple-100 text-purple-700',
+    emoji: '👁️',
+    description: '监控 X 上舆情和竞品'
+  },
+  'github-monitor': {
+    name: 'Dev Agent',
+    displayName: 'Dev Agent',
+    icon: 'Code',
+    color: 'bg-blue-100 text-blue-700',
+    emoji: '⚙️',
+    description: '监控 GitHub'
+  }
+} as const;
+
 export const MOCK_DATA: CardData[] = [
   {
     id: 1,
     type: 'celebration',
     size: '2x2',
-    title: "大客户签约: Acme Corp",
-    summary: "ARR 增长 $50k。这是一个重要的里程碑，不仅是因为收入，更意味着我们在医疗领域的突破。这对我们 @Jason 的设计有参考价值。",
+    title: "大客户签约: TCL",
+    summary: "ARR 增长 $50k。这是一个重要的里程碑，不仅是因为收入，更意味着我们在大B销售的突破。",
     meta: "刚刚 · 销售团队",
     details: "我们刚刚收到了 Acme Corp 的签约确认邮件。这笔交易历时 6 个月，由 Sarah 牵头。对方特别看重我们的数据合规性功能。接下来 CS 团队需要在一个月内完成部署，预计需要协调 3 名工程师。",
     tags: ["#Sales", "#Win", "#Milestone"],
     agent: {
       type: 'email-monitor',
-      name: 'Sales Agent',
-      displayName: 'Sales Agent',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💼'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'business',
     sourcePlatform: 'gmail',
@@ -42,11 +70,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Eng", "#Performance"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -58,21 +86,48 @@ export const MOCK_DATA: CardData[] = [
     ]
   },
   {
+    id: 3,
+    type: 'voice',
+    size: '2x1',
+    title: '"这简直是魔法！"',
+    summary: "用户 @jason_design 在 Twitter 上盛赞 AI 抠图功能。",
+    meta: "2小时前 · 社交媒体",
+    details: "Jason 是知名的设计类 KOL，他的这条推文已经获得了 400+ 转推。运营团队建议我们在 2 小时内跟进互动，送出一年的 Pro 账号，并邀请他参与下个版本的内测。",
+    tags: ["#Feedback", "#Viral"],
+    agent: {
+      type: 'social-monitor',
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
+    },
+    category: 'business',
+    sourcePlatform: 'twitter',
+    sourceCount: 12,
+    timeAgo: "2h ago",
+    likes: 24,
+    comments: 7,
+    mentions: [
+      { userId: 'jason_design', userName: 'jason_design' }
+    ]
+  },
+  {
     id: 4,
     type: 'intelligence',
     size: '1x2',
     title: "Linear 推出了新的 AI 过滤功能",
     summary: "根据官网更新，他们上线了智能任务分类功能，这对我们 @Jason 的设计有参考价值。",
     meta: "昨天 · 市场情报",
-    details: "监控 Agent 发现竞品 X 的 Pricing 页面发生了结构性变化。他们去掉了 $29 的档位，新增了 'Contact Sales'。推测他们正在通过 PLG 转销售策略，我们需要重新评估 Q4 的定价策略以应对潜在的价格战。",
+    details: "监控 Agent 发现竞品 Linear 的 Pricing 页面发生了结构性变化。他们去掉了 $29 的档位，新增了 'Contact Sales'。推测他们正在通过 PLG 转销售策略，我们需要重新评估 Q4 的定价策略以应对潜在的价格战。",
     tags: ["#Competitor", "#Strategy"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'competitor',
     sourcePlatform: 'twitter',
@@ -87,37 +142,36 @@ export const MOCK_DATA: CardData[] = [
     ]
   },
   {
-    id: 3,
-    type: 'voice',
-    size: '2x1',
-    title: '"这简直是魔法！"',
-    summary: "用户 @jason_design 在 Twitter 上盛赞 AI 抠图功能。",
-    meta: "2小时前 · 社交媒体",
-    details: "Jason 是知名的设计类 KOL，他的这条推文已经获得了 400+ 转推。运营团队建议我们在 2 小时内跟进互动，送出一年的 Pro 账号，并邀请他参与下个版本的内测。",
-    tags: ["#Feedback", "#Viral"],
+    id: 5,
+    type: 'technical',
+    size: '1x1',
+    title: "Bug #402 修复",
+    summary: "OAuth 回调问题已解决。",
+    meta: "3小时前 · 研发",
+    details: "这是一个影响 5% 欧洲用户的边缘案例，主要是由于时区处理不当导致的 Token 失效。修复代码已部署到 Prod 环境。",
+    tags: ["#Fix", "#Auth"],
     agent: {
-      type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      type: 'github-monitor',
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
-    category: 'business',
-    sourcePlatform: 'twitter',
-    sourceCount: 12,
-    timeAgo: "2h ago",
-    likes: 24,
-    comments: 7,
-    mentions: [
-      { userId: 'jason_design', userName: 'jason_design' }
+    category: 'product',
+    sourcePlatform: 'github',
+    sourceCount: 8,
+    timeAgo: "3h ago",
+    likes: 6,
+    relatedDocs: [
+      { id: 'bug-402', name: 'Bug #402', type: 'Issue' }
     ]
   },
   {
     id: 6,
     type: 'celebration',
     size: '1x1',
-    title: "新成员入职",
+    title: "欢迎@Alex入职",
     summary: "欢迎 Alex 加入前端团队！",
     meta: "4小时前 · HR",
     details: "Alex 之前在 Figma 工作，擅长 WebGL 和交互设计。他将负责 Inflow 下一代仪表盘的视觉重构工作。",
@@ -163,32 +217,6 @@ export const MOCK_DATA: CardData[] = [
     ]
   },
   {
-    id: 5,
-    type: 'technical',
-    size: '1x1',
-    title: "Bug #402 修复",
-    summary: "OAuth 回调问题已解决。",
-    meta: "3小时前 · 研发",
-    details: "这是一个影响 5% 欧洲用户的边缘案例，主要是由于时区处理不当导致的 Token 失效。修复代码已部署到 Prod 环境。",
-    tags: ["#Fix", "#Auth"],
-    agent: {
-      type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
-    },
-    category: 'product',
-    sourcePlatform: 'github',
-    sourceCount: 8,
-    timeAgo: "3h ago",
-    likes: 6,
-    relatedDocs: [
-      { id: 'bug-402', name: 'Bug #402', type: 'Issue' }
-    ]
-  },
-  {
     id: 8,
     type: 'celebration',
     size: '1x2',
@@ -198,12 +226,12 @@ export const MOCK_DATA: CardData[] = [
     details: "这是自产品上线以来的重要里程碑。增长主要来自移动端的推广活动，其中 iOS 端贡献了 65% 的新用户。下一步需要关注留存率，目前 7 日留存为 68%，还有提升空间。",
     tags: ["#Growth", "#Milestone", "#Metrics"],
     agent: {
-      type: 'github-monitor',
-      name: 'Analytics Bot',
-      displayName: 'Analytics Bot',
-      icon: 'BarChart',
-      color: 'bg-green-100 text-green-700',
-      emoji: '📊'
+      type: 'human-post',
+      name: 'Product Team',
+      icon: 'User',
+      color: 'bg-stone-100 text-stone-700',
+      authorName: 'Product Team',
+      avatarFallback: 'PT'
     },
     category: 'product',
     sourcePlatform: 'linear',
@@ -226,11 +254,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Feature", "#UX", "#Mobile"],
     agent: {
       type: 'email-monitor',
-      name: 'Feedback Collector',
-      displayName: 'Feedback Collector',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💬'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'gmail',
@@ -250,11 +278,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#API", "#Release", "#Backend"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -277,11 +305,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Competitor", "#Pricing"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'competitor',
     sourcePlatform: 'twitter',
@@ -329,11 +357,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Performance", "#CDN", "#Infrastructure"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -352,11 +380,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Testimonial", "#CaseStudy", "#Enterprise"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'business',
     sourcePlatform: 'twitter',
@@ -402,11 +430,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Reliability", "#SRE", "#Infrastructure"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -425,11 +453,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#TypeScript", "#Refactor", "#Frontend"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -449,11 +477,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#UX", "#Mobile", "#Feedback"],
     agent: {
       type: 'email-monitor',
-      name: 'Feedback Collector',
-      displayName: 'Feedback Collector',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💬'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'gmail',
@@ -473,11 +501,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#AI", "#GPT", "#Technology"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'competitor',
     sourcePlatform: 'twitter',
@@ -500,11 +528,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Retention", "#CS", "#Success"],
     agent: {
       type: 'email-monitor',
-      name: 'Sales Agent',
-      displayName: 'Sales Agent',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💼'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'business',
     sourcePlatform: 'gmail',
@@ -524,11 +552,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Database", "#Performance", "#Backend"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -547,11 +575,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Templates", "#Design", "#Feature"],
     agent: {
       type: 'email-monitor',
-      name: 'Feedback Collector',
-      displayName: 'Feedback Collector',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💬'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'gmail',
@@ -571,11 +599,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Integration", "#Slack", "#Competitor"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'competitor',
     sourcePlatform: 'twitter',
@@ -640,15 +668,15 @@ export const MOCK_DATA: CardData[] = [
     title: '"这个新功能太棒了！"',
     summary: "Beta 测试用户对 AI 助手的评价。",
     meta: "昨天 · Beta 测试",
-    details: '我们向 500 名 Beta 测试用户发布了新的 AI 助手功能，收到了大量正面反馈。87% 的用户表示这个功能“非常有价值”，平均使用时长增加了 35%。正式版本计划在下个月发布。',
+    details: '我们向 500 名 Beta 测试用户发布了新的 AI 助手功能，收到了大量正面反馈。87% 的用户表示这个功能"非常有价值"，平均使用时长增加了 35%。正式版本计划在下个月发布。',
     tags: ["#Beta", "#AI", "#Feature"],
     agent: {
       type: 'email-monitor',
-      name: 'Feedback Collector',
-      displayName: 'Feedback Collector',
-      icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700',
-      emoji: '💬'
+      name: AGENT_CONFIG['email-monitor'].name,
+      displayName: AGENT_CONFIG['email-monitor'].displayName,
+      icon: AGENT_CONFIG['email-monitor'].icon,
+      color: AGENT_CONFIG['email-monitor'].color,
+      emoji: AGENT_CONFIG['email-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'gmail',
@@ -668,11 +696,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Automation", "#Jira", "#Competitor"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'competitor',
     sourcePlatform: 'twitter',
@@ -691,11 +719,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#OpenSource", "#Community", "#SDK"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -715,11 +743,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Architecture", "#Microservices", "#Performance"],
     agent: {
       type: 'github-monitor',
-      name: 'Dev Sentinel',
-      displayName: 'Dev Sentinel',
-      icon: 'Code',
-      color: 'bg-blue-100 text-blue-700',
-      emoji: '⚙️'
+      name: AGENT_CONFIG['github-monitor'].name,
+      displayName: AGENT_CONFIG['github-monitor'].displayName,
+      icon: AGENT_CONFIG['github-monitor'].icon,
+      color: AGENT_CONFIG['github-monitor'].color,
+      emoji: AGENT_CONFIG['github-monitor'].emoji
     },
     category: 'product',
     sourcePlatform: 'github',
@@ -739,11 +767,11 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Testimonial", "#Enterprise", "#Growth"],
     agent: {
       type: 'social-monitor',
-      name: 'Market Watch',
-      displayName: 'Market Watch',
-      icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700',
-      emoji: '🔍'
+      name: AGENT_CONFIG['social-monitor'].name,
+      displayName: AGENT_CONFIG['social-monitor'].displayName,
+      icon: AGENT_CONFIG['social-monitor'].icon,
+      color: AGENT_CONFIG['social-monitor'].color,
+      emoji: AGENT_CONFIG['social-monitor'].emoji
     },
     category: 'business',
     sourcePlatform: 'twitter',

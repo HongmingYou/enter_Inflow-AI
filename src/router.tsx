@@ -1,7 +1,8 @@
 import { MainLayout } from "./components/layout/MainLayout";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
-import Workbench from "./pages/Workbench";
+import WorkspaceHub from "./pages/WorkspaceHub";
+import Studio from "./pages/Studio";
 import Agents from "./pages/Agents";
 import NotFound from "./pages/NotFound";
 
@@ -24,14 +25,14 @@ export const routers = [
           element: <Dashboard />,
         },
         {
-          path: "workbench",
-          name: 'workbench',
-          element: <Workbench />,
+          path: "workspace",
+          name: 'workspace',
+          element: <WorkspaceHub />,
         },
         {
-          path: "workbench/:workspaceId",
-          name: 'workbench-detail',
-          element: <Workbench />,
+          path: "workspace/:workspaceId",
+          name: 'workspace-studio',
+          element: <Studio />,
         },
         {
           path: "agents",

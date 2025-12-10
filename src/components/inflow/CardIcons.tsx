@@ -2,26 +2,19 @@ import { Zap, Quote, Eye, Terminal, Activity, Code, MessageSquare, Mail, User } 
 import { AgentType, AgentInfo } from './types';
 
 // Agent 默认头像（emoji）
-export const getAgentAvatar = (agent: AgentInfo): { emoji?: string; fallback: string } => {
-  // 如果有自定义头像，返回它
-  if (agent.avatar) {
-    return { emoji: agent.avatar, fallback: agent.avatarFallback || agent.name.charAt(0) };
-  }
-  
+export const getAgentAvatar = (agentType: AgentType): string => {
   // 根据 Agent 类型返回默认头像
-  switch (agent.type) {
+  switch (agentType) {
     case 'github-monitor':
-      return { emoji: '🤖', fallback: 'GM' }; // GitHub Monitor
+      return 'GM'; // GitHub Monitor
     case 'social-monitor':
-      return { emoji: '👁️', fallback: 'SM' }; // Social Monitor
+      return 'SM'; // Social Monitor
     case 'email-monitor':
-      return { emoji: '📧', fallback: 'EM' }; // Email Monitor
+      return 'EM'; // Email Monitor
     case 'human-post':
-      // 人工发布使用首字母
-      const name = agent.authorName || agent.name;
-      return { fallback: name.charAt(0).toUpperCase() };
+      return 'H'; // Human Post
     default:
-      return { emoji: '🤖', fallback: 'A' };
+      return 'A';
   }
 };
 

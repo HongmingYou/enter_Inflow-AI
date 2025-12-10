@@ -24,7 +24,7 @@ const sourceIconMap: Record<SourcePlatform, React.ComponentType<{ size: number; 
 interface CardProps {
   data: CardData;
   onClick: () => void;
-  currentUserId?: string; // For checking if user is mentioned
+  currentUserId?: string;
   currentUserName?: string;
   onReactionAdd?: (cardId: number, reactionType: ReactionType) => void;
   onReactionRemove?: (cardId: number, reactionType: ReactionType) => void;
@@ -39,49 +39,6 @@ const cardTransition = {
   mass: 0.5
 };
 
-// Helper function to highlight mentions in text
-const highlightMentions = (text: string, mentions?: CardData['mentions'], currentUserId?: string): React.ReactNode => {
-  if (!mentions || mentions.length === 0) return text;
-  
-  // Check if current user is mentioned
-  const isCurrentUserMentioned = currentUserId && mentions.some(m => m.userId === currentUserId);
-  
-  if (!isCurrentUserMentioned) return text;
-  
-  // Simple regex to find @username patterns
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const regex = /@(\w+)/g;
-  let match;
-  
-  while ((match = regex.exec(text)) !== null) {
-    // Add text before match
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    
-    // Check if this mention is for current user
-    const mention = mentions.find(m => m.userName.toLowerCase() === match[1].toLowerCase());
-    if (mention && mention.userId === currentUserId) {
-      parts.push(
-        <span key={match.index} className="bg-yellow-200/80 px-1 rounded font-medium">
-          {match[0]}
-        </span>
-      );
-    } else {
-      parts.push(match[0]);
-    }
-    
-    lastIndex = regex.lastIndex;
-  }
-  
-  // Add remaining text
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-  
-  return parts.length > 0 ? <>{parts}</> : text;
-};
 
 export function Card({ 
   data, 
@@ -127,9 +84,6 @@ export function Card({
   };
 
   const isVoice = data.type === 'voice';
-  
-  // Check if current user is mentioned
-  const isMentioned = currentUserId && data.mentions?.some(m => m.userId === currentUserId);
   
   // Calculate reaction counts
   const reactions = data.reactions || [];
@@ -191,18 +145,9 @@ export function Card({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      className={`group relative rounded-xl overflow-hidden cursor-pointer border transition-all duration-300 ${sizeClasses[data.size]} ${
-        isMentioned 
-          ? 'bg-orange-50/30 border-orange-200 shadow-md' 
-          : 'bg-white border-stone-200 hover:border-stone-300 shadow-sm'
-      } hover:shadow-xl`}
+      className={`group relative rounded-xl overflow-hidden cursor-pointer border transition-all duration-300 ${sizeClasses[data.size]} bg-white border-stone-200 hover:border-stone-300 shadow-sm hover:shadow-xl`}
       whileHover={{ scale: 1.02, zIndex: 10, transition: { duration: 0.2 } }}
     >
-      {/* Mention indicator - Left glow bar */}
-      {isMentioned && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 z-30" />
-      )}
-
       <motion.div
         layoutId={`card-art-${data.id}`}
         transition={cardTransition}
@@ -274,12 +219,12 @@ export function Card({
                 data.size === '2x2' ? 'text-xl md:text-2xl' : 'text-base md:text-lg'
               }`}
             >
-              {highlightMentions(data.title, data.mentions, currentUserId)}
+              {data.title}
             </motion.h3>
 
             {data.size !== '1x1' && (
               <p className="text-xs md:text-sm line-clamp-2 leading-relaxed text-stone-600 font-medium">
-                {highlightMentions(data.summary, data.mentions, currentUserId)}
+                {data.summary}
               </p>
             )}
           </div>

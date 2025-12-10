@@ -3,8 +3,8 @@ import { X, Sparkles, Send } from 'lucide-react';
 import { CardData } from './types';
 
 interface ChatInterfaceProps {
-  item: CardData;
-  onClose: () => void;
+  item?: CardData;
+  onClose?: () => void;
 }
 
 interface Message {
@@ -14,7 +14,10 @@ interface Message {
 
 export function ChatInterface({ item, onClose }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', text: `你好！关于 "${item.title}"，你想了解什么？我可以帮你总结要点或起草回复。` }
+    { role: 'ai', text: item 
+      ? `你好！关于 "${item.title}"，你想了解什么？我可以帮你总结要点或起草回复。`
+      : '你好！我是 Inflow AI 助手，有什么可以帮助你的吗？'
+    }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,12 +39,17 @@ export function ChatInterface({ item, onClose }: ChatInterfaceProps) {
 
     // Simulate AI response since we don't have the API key configured
     setTimeout(() => {
-      const responses = [
-        `关于${item.title}，这是一个非常重要的更新。根据上下文，我建议你关注以下几点：${item.summary}`,
-        `基于这条信息，我认为关键要点是：${item.details.slice(0, 100)}...`,
-        `这是一个值得关注的动态。标签 ${item.tags.join(', ')} 表明这与团队的核心工作密切相关。`
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      let randomResponse: string;
+      if (item) {
+        const responses = [
+          `关于${item.title}，这是一个非常重要的更新。根据上下文，我建议你关注以下几点：${item.summary}`,
+          `基于这条信息，我认为关键要点是：${item.details.slice(0, 100)}...`,
+          `这是一个值得关注的动态。标签 ${item.tags.join(', ')} 表明这与团队的核心工作密切相关。`
+        ];
+        randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      } else {
+        randomResponse = '我理解你的问题。让我帮你分析一下相关数据源，并为你提供一些建议。';
+      }
       setMessages(prev => [...prev, { role: 'ai', text: randomResponse }]);
       setIsLoading(false);
     }, 1000);
@@ -54,9 +62,11 @@ export function ChatInterface({ item, onClose }: ChatInterfaceProps) {
           <Sparkles size={14} className="text-orange-500" />
           Inflow AI Agent
         </div>
-        <button onClick={onClose} className="text-stone-400 hover:text-stone-600 transition-colors">
-          <X size={16} />
-        </button>
+        {onClose && (
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 transition-colors">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
