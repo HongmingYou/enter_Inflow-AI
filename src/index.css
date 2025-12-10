@@ -1,0 +1,82 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Stone-based palette for Inflow */
+    --background: 40 20% 98%;
+    --foreground: 24 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
+    --primary: 24 10% 10%;
+    --primary-foreground: 40 20% 98%;
+
+    --secondary: 40 10% 96%;
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 40 10% 96%;
+    --muted-foreground: 24 6% 45%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 24 6% 83%;
+    --input: 24 6% 83%;
+    --ring: 25 95% 53%;
+
+    --radius: 0.75rem;
+
+    /* Custom Inflow colors */
+    --stone-50: 40 20% 98%;
+    --stone-100: 40 10% 96%;
+    --stone-200: 24 6% 83%;
+    --stone-300: 24 6% 70%;
+    --stone-400: 24 6% 55%;
+    --stone-500: 24 6% 45%;
+    --stone-600: 24 6% 35%;
+    --stone-700: 24 8% 25%;
+    --stone-800: 24 10% 15%;
+    --stone-900: 24 10% 10%;
+
+    /* Celebration card */
+    --celebration-pink: 340 80% 90%;
+    --celebration-blue: 220 80% 90%;
+
+    /* Voice card - Golden */
+    --voice-gold: 45 100% 50%;
+
+    /* Intelligence card */
+    --intelligence-cream: 45 20% 96%;
+    --intelligence-orange: 25 95% 53%;
+
+    /* Technical card */
+    --technical-slate: 210 20% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
