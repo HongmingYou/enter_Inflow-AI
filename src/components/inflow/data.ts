@@ -12,10 +12,15 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Sales", "#Win", "#Milestone"],
     agent: {
       type: 'email-monitor',
-      name: 'Email Monitor',
+      name: 'Sales Agent',
+      displayName: 'Sales Agent',
       icon: 'Mail',
-      color: 'bg-amber-100 text-amber-700'
+      color: 'bg-amber-100 text-amber-700',
+      emoji: '💼'
     },
+    category: 'business',
+    sourcePlatform: 'gmail',
+    sourceCount: 5,
     timeAgo: "刚刚",
     likes: 12,
     comments: 3,
@@ -37,10 +42,15 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Eng", "#Performance"],
     agent: {
       type: 'github-monitor',
-      name: 'GitHub Monitor',
+      name: 'Dev Sentinel',
+      displayName: 'Dev Sentinel',
       icon: 'Code',
-      color: 'bg-blue-100 text-blue-700'
+      color: 'bg-blue-100 text-blue-700',
+      emoji: '⚙️'
     },
+    category: 'product',
+    sourcePlatform: 'github',
+    sourceCount: 45,
     timeAgo: "1h ago",
     likes: 8,
     relatedDocs: [
@@ -58,10 +68,15 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Competitor", "#Strategy"],
     agent: {
       type: 'social-monitor',
-      name: 'Social Monitor',
+      name: 'Market Watch',
+      displayName: 'Market Watch',
       icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700'
+      color: 'bg-purple-100 text-purple-700',
+      emoji: '🔍'
     },
+    category: 'competitor',
+    sourcePlatform: 'twitter',
+    sourceCount: 23,
     timeAgo: "2h ago",
     likes: 5,
     mentions: [
@@ -82,10 +97,15 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Feedback", "#Viral"],
     agent: {
       type: 'social-monitor',
-      name: 'Social Monitor',
+      name: 'Market Watch',
+      displayName: 'Market Watch',
       icon: 'MessageSquare',
-      color: 'bg-purple-100 text-purple-700'
+      color: 'bg-purple-100 text-purple-700',
+      emoji: '🔍'
     },
+    category: 'business',
+    sourcePlatform: 'twitter',
+    sourceCount: 12,
     timeAgo: "2h ago",
     likes: 24,
     comments: 7,
@@ -110,6 +130,8 @@ export const MOCK_DATA: CardData[] = [
       authorName: 'Sarah Chen',
       avatarFallback: 'SC'
     },
+    category: 'business',
+    sourcePlatform: 'slack',
     timeAgo: "4h ago",
     likes: 15
   },
@@ -130,6 +152,9 @@ export const MOCK_DATA: CardData[] = [
       authorName: 'Legal Team',
       avatarFallback: 'LT'
     },
+    category: 'business',
+    sourcePlatform: 'notion',
+    sourceCount: 3,
     timeAgo: "5h ago",
     likes: 3,
     comments: 1,
@@ -148,10 +173,15 @@ export const MOCK_DATA: CardData[] = [
     tags: ["#Fix", "#Auth"],
     agent: {
       type: 'github-monitor',
-      name: 'GitHub Monitor',
+      name: 'Dev Sentinel',
+      displayName: 'Dev Sentinel',
       icon: 'Code',
-      color: 'bg-blue-100 text-blue-700'
+      color: 'bg-blue-100 text-blue-700',
+      emoji: '⚙️'
     },
+    category: 'product',
+    sourcePlatform: 'github',
+    sourceCount: 8,
     timeAgo: "3h ago",
     likes: 6,
     relatedDocs: [

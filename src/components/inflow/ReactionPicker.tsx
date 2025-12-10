@@ -37,8 +37,8 @@ export function ReactionPicker({
       onReactionAdd(type);
     }
     
-    // Keep popover open for quick multiple reactions
-    // setOpen(false);
+    // Close popover immediately after selection
+    setOpen(false);
   };
 
   return (
@@ -56,12 +56,18 @@ export function ReactionPicker({
         </button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-auto p-2 bg-white border-stone-200 shadow-lg"
+        className="w-auto p-2 bg-white border-stone-200 shadow-lg rounded-lg"
         align="end"
         side="top"
         onClick={(e) => e.stopPropagation()}
+        sideOffset={8}
       >
-        <div className="flex items-center gap-1">
+        <motion.div 
+          className="flex items-center gap-1"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.15 }}
+        >
           {REACTION_OPTIONS.map((type) => {
             const group = reactionGroups.find(g => g.type === type);
             const count = group?.count || 0;
@@ -71,8 +77,9 @@ export function ReactionPicker({
               <motion.button
                 key={type}
                 onClick={() => handleReactionClick(type)}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
+                whileTap={{ scale: 0.85 }}
+                transition={{ duration: 0.2 }}
                 className={`
                   relative px-2 py-1.5 rounded-md text-lg transition-all
                   ${userReacted 
@@ -84,17 +91,21 @@ export function ReactionPicker({
               >
                 <span>{type}</span>
                 {count > 0 && (
-                  <span className={`
-                    absolute -top-1 -right-1 text-[10px] px-1 rounded-full
-                    ${userReacted ? 'bg-orange-500 text-white' : 'bg-stone-500 text-white'}
-                  `}>
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className={`
+                      absolute -top-1 -right-1 text-[10px] px-1 rounded-full font-medium
+                      ${userReacted ? 'bg-orange-500 text-white' : 'bg-stone-500 text-white'}
+                    `}
+                  >
                     {count}
-                  </span>
+                  </motion.span>
                 )}
               </motion.button>
             );
           })}
-        </div>
+        </motion.div>
       </PopoverContent>
     </Popover>
   );

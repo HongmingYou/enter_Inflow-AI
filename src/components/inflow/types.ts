@@ -1,14 +1,22 @@
 // 4种 Agent 类型
 export type AgentType = 'github-monitor' | 'social-monitor' | 'email-monitor' | 'human-post';
 
+// 业务分类
+export type CategoryType = 'all' | 'business' | 'product' | 'competitor';
+
+// 数据来源平台
+export type SourcePlatform = 'gmail' | 'github' | 'linear' | 'figma' | 'slack' | 'twitter' | 'jira' | 'notion';
+
 export interface AgentInfo {
   type: AgentType;
   name: string; // Agent 名称，如 "GitHub Monitor" 或人名
+  displayName?: string; // 新的显示名称，如 "Sales Agent", "Dev Sentinel"
   icon: string; // Icon name for lucide-react
   color: string; // Tailwind color class for pill background
   authorName?: string; // 如果是人工发布，显示发布者名字
   avatar?: string; // 头像 URL 或 emoji
   avatarFallback?: string; // 头像 fallback 文字（用于显示首字母）
+  emoji?: string; // Optional emoji for visual identity
 }
 
 export interface Mention {
@@ -48,6 +56,12 @@ export interface CardData {
   tags: string[];
   // Agent information
   agent: AgentInfo;
+  // Business category for filtering
+  category: CategoryType;
+  // Source platform for filtering
+  sourcePlatform: SourcePlatform;
+  // Number of raw data points this card was generated from
+  sourceCount?: number;
   // Mentions - users mentioned in this card
   mentions?: Mention[];
   // Time information

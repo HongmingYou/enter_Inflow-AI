@@ -45,6 +45,8 @@ export function CommentDialog({
     if (commentText.trim()) {
       onCommentAdd(commentText.trim());
       setCommentText('');
+      // Keep dialog open so user can see their comment appear
+      // and add more if needed
     }
   };
 
@@ -114,24 +116,31 @@ export function CommentDialog({
                 {currentUserName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 flex gap-2">
-              <Textarea
-                ref={textareaRef}
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="写下你的评论... (Enter 发送，Shift+Enter 换行)"
-                className="min-h-[60px] resize-none"
-                rows={2}
-              />
-              <Button
-                onClick={handleSend}
-                disabled={!commentText.trim()}
-                size="icon"
-                className="self-end"
-              >
-                <Send size={16} />
-              </Button>
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Textarea
+                  ref={textareaRef}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="写下你的评论..."
+                  className="min-h-[60px] resize-none focus-visible:ring-orange-500"
+                  rows={2}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={!commentText.trim()}
+                  size="icon"
+                  className="self-end bg-orange-500 hover:bg-orange-600 disabled:opacity-50 transition-all"
+                  title="发送 (Enter)"
+                >
+                  <Send size={16} />
+                </Button>
+              </div>
+              <p className="text-xs text-stone-400 pl-1">
+                按 <kbd className="px-1.5 py-0.5 bg-stone-100 rounded text-stone-600 font-mono">Enter</kbd> 发送，
+                <kbd className="px-1.5 py-0.5 bg-stone-100 rounded text-stone-600 font-mono">Shift + Enter</kbd> 换行
+              </p>
             </div>
           </div>
         </div>

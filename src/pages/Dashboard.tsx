@@ -3,13 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale/zh-CN';
-import { Card } from './Card';
-import { ExpandedCard } from './ExpandedCard';
-import { FilterBar } from './FilterBar';
-import { MOCK_DATA } from './data';
-import { CardData, ReactionType, Reaction, Comment, CategoryType, SourcePlatform } from './types';
+import { Card } from '@/components/inflow/Card';
+import { ExpandedCard } from '@/components/inflow/ExpandedCard';
+import { FilterBar } from '@/components/inflow/FilterBar';
+import { MOCK_DATA } from '@/components/inflow/data';
+import { CardData, ReactionType, Reaction, Comment, CategoryType, SourcePlatform } from '@/components/inflow/types';
 
-export function Inflow() {
+export default function Dashboard() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [cardInteractions, setCardInteractions] = useState<Record<number, {
     reactions: Reaction[];
@@ -71,7 +71,6 @@ export function Inflow() {
       );
       
       if (existingReaction) {
-        // Already reacted, do nothing (should be handled by remove)
         return prev;
       }
       
@@ -134,26 +133,23 @@ export function Inflow() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-orange-100 selection:text-orange-900">
-      {/* Noise Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.02] mix-blend-multiply bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
+    <div className="min-h-screen font-sans selection:bg-orange-100 selection:text-orange-900">
       {/* Header */}
       <header className="pt-20 pb-10 px-6 max-w-7xl mx-auto border-b border-stone-200">
         <div className="flex flex-col gap-6">
-          {/* Top Row: Logo and AI Status */}
+          {/* Top Row: Title and AI Status */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2 text-stone-500 font-mono text-xs uppercase tracking-widest">
                 <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                 {format(new Date(), 'EEEE, MMMM d, yyyy', { locale: zhCN })}
               </div>
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-stone-900">
-                Inflow.
+              <h1 className="text-5xl md:text-6xl font-bold tracking-tighter text-stone-900">
+                InFlow.
               </h1>
             </div>
 
-            {/* Dynamic AI Status - replaces Morning Brief */}
+            {/* Dynamic AI Status */}
             <div className="text-stone-500 text-sm md:text-right max-w-lg leading-relaxed flex flex-col items-start md:items-end gap-2">
               <div className="flex items-start gap-2">
                 <p className="flex-1">
