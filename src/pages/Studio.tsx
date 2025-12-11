@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { motion, useScroll } from 'framer-motion';
+import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { 
   FileText, 
   Mic, 
@@ -19,7 +19,11 @@ import {
   Database,
   Bell,
   PanelLeft,
-  PanelRight
+  PanelRight,
+  BookOpen,
+  ChevronRight,
+  ChevronDown,
+  Folder
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -127,6 +131,12 @@ export default function Studio() {
   const [highlightedSourceId, setHighlightedSourceId] = useState<string | null>(null);
   const [isInputFloating, setIsInputFloating] = useState(false);
   const [isAIThinking, setIsAIThinking] = useState(false);
+  
+  // New State for Mode
+  const [workMode, setWorkMode] = useState<'read' | 'write'>('read');
+  const [activeNoteId, setActiveNoteId] = useState<number | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['sources', 'notes']);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -155,7 +165,7 @@ export default function Studio() {
 
     scrollArea.addEventListener('scroll', handleScroll);
     return () => scrollArea.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [workMode]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -310,12 +320,520 @@ export default function Studio() {
     { label: 'Q3 Financial Report' },
   ];
 
+  const renderSourcesPanelContent = () => (
+    <>
+      <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 bg-white sticky top-0 z-10">
+        <h2 className="font-serif font-bold text-lg">Sources</h2>
+        <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-medium">
+          {sources.filter(s => s.isSelected).length}/{sources.length}
+        </span>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-1">
+          {sources.map(source => {
+            const Icon = getSourceIcon(source.type);
+            const isDragging = draggedSource?.id === source.id;
+            const isHighlighted = highlightedSourceId === source.id;
+            return (
+              <motion.div 
+                key={source.id}
+                draggable
+                onDragStart={handleDragStart(source) as any}
+                onDragEnd={handleDragEnd}
+                onClick={() => toggleSource(source.id)}
+                animate={{
+                  backgroundColor: isHighlighted 
+                    ? 'rgba(255, 107, 0, 0.15)' 
+                    : source.isSelected 
+                      ? 'rgba(255, 243, 224, 0.5)' 
+                      : 'transparent',
+                  borderColor: isHighlighted 
+                    ? 'rgba(255, 107, 0, 0.4)' 
+                    : source.isSelected 
+                      ? 'rgba(255, 107, 0, 0.2)' 
+                      : 'transparent',
+                  scale: isHighlighted ? 1.02 : 1,
+                }}
+                transition={{
+                  duration: 0.2,
+                  repeat: isHighlighted ? Infinity : 0,
+                  repeatType: 'reverse' as const,
+                  repeatDelay: 0.5,
+                }}
+                className={cn(
+                  "group relative flex items-center gap-3 p-3 rounded-xl cursor-move transition-all duration-200 border",
+                  isDragging && 'opacity-50 scale-95'
+                )}
+              >
+                <div className={cn(
+                  "transition-colors",
+                  source.isSelected ? 'text-orange-600' : 'text-gray-400 group-hover:text-gray-600'
+                )}>
+                  <Icon size={18} />
+                </div>
+                <span className={cn(
+                  "text-sm truncate flex-1",
+                  source.isSelected ? 'font-medium text-gray-900' : 'text-gray-600'
+                )}>
+                  {source.name}
+                </span>
+                {source.isSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>}
+                {isHighlighted && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute inset-0 rounded-xl border-2 border-orange-400 pointer-events-none"
+                  />
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+      <div className="p-4 border-t border-gray-50/30">
+        <button className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium hover:bg-white hover:border-orange-200 hover:text-orange-600 hover:shadow-sm transition-all">
+          <Plus size={16} /> Add Source
+        </button>
+      </div>
+    </>
+  );
+
+  const renderFileTreePanelContent = () => (
+    <>
+        <div className="h-16 flex items-center px-5 border-b border-gray-50/30 bg-white sticky top-0 z-10">
+            <h2 className="font-serif font-bold text-lg">Files</h2>
+        </div>
+        <ScrollArea className="flex-1">
+            <div className="p-3 space-y-2">
+                {/* Sources Folder */}
+                <div>
+                    <button 
+                        onClick={() => setExpandedFolders(prev => prev.includes('sources') ? prev.filter(f => f !== 'sources') : [...prev, 'sources'])}
+                        className="flex items-center gap-2 w-full p-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                    >
+                        {expandedFolders.includes('sources') ? <ChevronDown size={16} className="text-gray-400"/> : <ChevronRight size={16} className="text-gray-400"/>}
+                        <Folder size={16} className="text-orange-500" fill="currentColor" fillOpacity={0.2} />
+                        Sources
+                    </button>
+                    <AnimatePresence>
+                        {expandedFolders.includes('sources') && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden pl-4"
+                            >
+                                <div className="pl-2 border-l border-gray-100 py-1 space-y-0.5">
+                                    {sources.map(source => {
+                                        const Icon = getSourceIcon(source.type);
+                                        return (
+                                            <div 
+                                                key={source.id} 
+                                                draggable
+                                                onDragStart={handleDragStart(source)}
+                                                onDragEnd={handleDragEnd}
+                                                className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm text-gray-600 group"
+                                            >
+                                                <Icon size={14} className="text-gray-400 group-hover:text-gray-600" />
+                                                <span className="truncate">{source.name}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Notes Folder */}
+                <div>
+                    <button 
+                        onClick={() => setExpandedFolders(prev => prev.includes('notes') ? prev.filter(f => f !== 'notes') : [...prev, 'notes'])}
+                        className="flex items-center gap-2 w-full p-2 hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                    >
+                        {expandedFolders.includes('notes') ? <ChevronDown size={16} className="text-gray-400"/> : <ChevronRight size={16} className="text-gray-400"/>}
+                        <Folder size={16} className="text-blue-500" fill="currentColor" fillOpacity={0.2} />
+                        Notes
+                    </button>
+                    <AnimatePresence>
+                        {expandedFolders.includes('notes') && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden pl-4"
+                            >
+                                <div className="pl-2 border-l border-gray-100 py-1 space-y-0.5">
+                                    {notes.filter(n => n.type === 'note').map(note => (
+                                        <div 
+                                            key={note.id}
+                                            onClick={() => setActiveNoteId(note.id)}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors",
+                                                activeNoteId === note.id ? "bg-orange-50 text-orange-700 font-medium" : "hover:bg-gray-50 text-gray-600"
+                                            )}
+                                        >
+                                            <FileText size={14} className={activeNoteId === note.id ? "text-orange-500" : "text-gray-400"} />
+                                            <span className="truncate">{note.title}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+        </ScrollArea>
+    </>
+  );
+
+  const renderChatContent = (isCompact: boolean) => (
+    <>
+         {/* Panel Header */}
+         <div className="h-16 flex-shrink-0 flex items-center justify-between px-6 border-b border-gray-50/30">
+            <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-orange-500" />
+                <span className="font-medium text-sm text-gray-500">AI Assistant</span>
+            </div>
+            <div className="flex gap-1">
+                <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
+                  <Clock size={16}/>
+                </button>
+                <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
+                  <MoreHorizontal size={16}/>
+                </button>
+            </div>
+        </div>
+
+        {/* Chat Content Area */}
+        <ScrollArea ref={scrollAreaRef} className="flex-1">
+          <div className={cn("py-6 space-y-6 scroll-smooth", isCompact ? "px-4" : "px-8")} ref={chatContainerRef}>
+            {chatHistory.map(msg => (
+              <motion.div
+                key={msg.id}
+                data-highlighted={msg.isHighlighted}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  backgroundColor: msg.isHighlighted 
+                    ? 'rgba(254, 243, 199, 0.5)' 
+                    : 'transparent'
+                }}
+                transition={{ duration: 0.3 }}
+                className={cn(
+                  "flex flex-col",
+                  msg.role === 'user' ? 'items-end' : 'items-start'
+                )}
+              >
+                {msg.role === 'user' ? (
+                  <div className="bg-[#F4F4F2] px-4 py-3 rounded-2xl rounded-tr-sm text-gray-800 text-[14px] font-medium leading-relaxed max-w-[90%]">
+                    {msg.content}
+                  </div>
+                ) : (
+                  <div className={cn("max-w-full group", isCompact ? "" : "pr-4")}>
+                    <div className="prose prose-slate max-w-none">
+                      <div className="font-serif text-[15px] leading-7 text-[#2C2C2C]">
+                        {msg.content.split('\n').map((line, i) => {
+                          const citationMatch = line.match(/Q3\s*财报|Q3\s*Financial\s*Report/i);
+                          const sourceId = citationMatch ? '1' : null;
+                          const percentageMatch = line.match(/(\d+%)/g);
+                          const parts = line.split(/(\d+%)/g);
+                          
+                          return (
+                            <div key={i} className="mb-3">
+                              {line.startsWith('**') ? (
+                                <strong className="block text-gray-900 font-bold font-serif text-base mb-1 mt-4">
+                                  {line.replace(/\*\*/g, '')}
+                                </strong>
+                              ) : citationMatch ? (
+                                <span
+                                  onMouseEnter={() => sourceId && setHighlightedSourceId(sourceId)}
+                                  onMouseLeave={() => setHighlightedSourceId(null)}
+                                  className="text-orange-600 underline decoration-orange-300 cursor-pointer hover:text-orange-700 transition-colors"
+                                >
+                                  {parts.map((part, idx) => 
+                                    percentageMatch?.includes(part) ? (
+                                      <span key={idx} className="bg-orange-100 text-orange-900 px-1 py-0.5 rounded font-semibold text-xs">
+                                        {part}
+                                      </span>
+                                    ) : (
+                                      <span key={idx}>{part}</span>
+                                    )
+                                  )}
+                                </span>
+                              ) : percentageMatch ? (
+                                <span>
+                                  {parts.map((part, idx) => 
+                                    percentageMatch.includes(part) ? (
+                                      <span key={idx} className="bg-orange-100 text-orange-900 px-1 py-0.5 rounded font-semibold text-xs">
+                                        {part}
+                                      </span>
+                                    ) : (
+                                      <span key={idx}>{part}</span>
+                                    )
+                                  )}
+                                </span>
+                              ) : (
+                                <span>{line}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {/* Context Actions */}
+                    <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="text-[10px] font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1 bg-orange-50 px-2 py-1 rounded">
+                        <PenTool size={10}/> Save
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+            <div className="h-24" ref={chatEndRef}></div>
+          </div>
+        </ScrollArea>
+
+        {/* Input Area */}
+        {isCompact ? (
+            // Fixed bottom input for Right Panel
+            <div 
+                className="p-4 border-t border-gray-100 bg-white"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+            >
+                 <div className={cn(
+                    "relative transition-all",
+                    isDraggingOverInput && "scale-105"
+                 )}>
+                    <input 
+                        ref={inputRef}
+                        type="text" 
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder={isDraggingOverInput ? "Drop file..." : "Ask AI..."} 
+                        className={cn(
+                            "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-300 pr-10 transition-all",
+                            isDraggingOverInput && "border-orange-400 bg-orange-50/50"
+                        )}
+                    />
+                    <button 
+                        onClick={handleSend}
+                        disabled={!input.trim() || isAIThinking}
+                        className={cn(
+                          "absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all",
+                          input.trim() 
+                            ? 'text-orange-600 hover:bg-orange-50' 
+                            : 'text-gray-300'
+                        )}
+                    >
+                        <ArrowRight size={16} />
+                    </button>
+                 </div>
+            </div>
+        ) : (
+            // Floating input for Center Panel
+            <motion.div 
+              className={cn(
+                "absolute bottom-6",
+                isInputFloating ? "left-1/2 -translate-x-1/2 w-[600px]" : "left-6 right-6"
+              )}
+              animate={{
+                opacity: isInputFloating ? 0.9 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+                <div className={cn(
+                  "bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] border flex items-center gap-2 ring-1 ring-black/5 transition-all",
+                  isDraggingOverInput 
+                    ? "border-orange-400 ring-orange-200 shadow-[0_8px_30px_rgba(255,107,0,0.2)] scale-105" 
+                    : "border-gray-100",
+                  isInputFloating && "backdrop-blur-md bg-white/90"
+                )}>
+                    {isAIThinking && (
+                        <div className="flex items-center gap-1.5 px-2">
+                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-75"></span>
+                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></span>
+                        </div>
+                    )}
+                    <button className="w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex items-center justify-center transition-all flex-shrink-0">
+                        <Plus size={20} />
+                    </button>
+                    <input 
+                        ref={inputRef}
+                        type="text" 
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder={isDraggingOverInput ? "Drop file here..." : "Ask anything..."} 
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-base text-gray-800 placeholder-gray-400 h-10 px-2 focus:outline-none"
+                    />
+                    <button 
+                        onClick={handleSend}
+                        disabled={!input.trim() || isAIThinking}
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0",
+                          input.trim() && !isAIThinking
+                            ? 'bg-black text-white hover:bg-gray-800 hover:scale-105' 
+                            : 'bg-gray-100 text-gray-300'
+                        )}
+                    >
+                        <ArrowRight size={18} />
+                    </button>
+                </div>
+            </motion.div>
+        )}
+    </>
+  );
+
+  const renderEditorPanelContent = () => {
+    const activeNote = notes.find(n => n.id === activeNoteId);
+    return (
+        <>
+            <div className="h-16 flex items-center justify-between px-8 border-b border-gray-50/30">
+                <div className="flex items-center gap-3">
+                    <span className="text-gray-400"><FileText size={18}/></span>
+                    <span className="font-serif font-bold text-lg text-gray-800">
+                        {activeNote ? activeNote.title : 'Untitled'}
+                    </span>
+                    {activeNote?.tags.map(tag => (
+                        <span key={tag} className="px-2 py-0.5 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+                <div className="flex gap-2">
+                    <span className="text-xs text-gray-400 flex items-center">
+                        {activeNote ? `Last edited ${activeNote.date}` : ''}
+                    </span>
+                </div>
+            </div>
+            
+            <ScrollArea className="flex-1">
+                <div className="max-w-3xl mx-auto py-12 px-12">
+                     {activeNote ? (
+                        <div className="prose prose-lg prose-slate max-w-none">
+                            <textarea 
+                                value={activeNote.content}
+                                onChange={(e) => setNotes(prev => prev.map(n => n.id === activeNote.id ? {...n, content: e.target.value} : n))}
+                                className="w-full h-[calc(100vh-300px)] resize-none outline-none border-none text-gray-700 text-lg leading-relaxed bg-transparent font-serif placeholder:text-gray-300"
+                                placeholder="Start writing..."
+                            />
+                        </div>
+                     ) : (
+                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                            <FileText size={48} strokeWidth={1} className="mb-4 text-gray-300"/>
+                            <p>Select a note from the file tree to start editing</p>
+                        </div>
+                     )}
+                </div>
+            </ScrollArea>
+        </>
+    );
+  };
+
+  const renderNotesPanelContent = () => (
+    <>
+        <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 sticky top-0 bg-white z-10">
+            <h2 className="font-serif font-bold text-lg">Studio</h2>
+            {/* View Mode Toggles */}
+            <div className="flex bg-gray-100 p-0.5 rounded-lg">
+                <button 
+                    onClick={() => setViewMode('grid')}
+                    className={cn(
+                        "p-1.5 rounded-md transition-all",
+                        viewMode === 'grid' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'
+                    )}
+                >
+                    <Grid size={14} />
+                </button>
+                <button 
+                    onClick={() => setViewMode('list')}
+                    className={cn(
+                        "p-1.5 rounded-md transition-all",
+                        viewMode === 'list' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'
+                    )}
+                >
+                    <List size={14} />
+                </button>
+            </div>
+        </div>
+        
+        {/* Tools Grid */}
+        <div className="px-5 py-4 border-b border-gray-50/30">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Create</span>
+            <div className="grid grid-cols-2 gap-2">
+                <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-sm transition-all group">
+                        <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <Play size={12} fill="currentColor"/>
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 group-hover:text-orange-700">Audio</span>
+                </button>
+                <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all group">
+                        <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <Layout size={12} />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700">Deck</span>
+                </button>
+            </div>
+        </div>
+
+        {/* Notes List */}
+        <ScrollArea className="flex-1">
+            <div className="p-4 space-y-3 bg-[#FAFAFA]">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Recent Notes</span>
+                {notes.map(note => (
+                    <motion.div 
+                        key={note.id} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer group"
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <div className="flex gap-1">
+                                {note.tags.map(tag => (
+                                    <span key={tag} className="px-1.5 py-0.5 bg-gray-100 text-[9px] uppercase font-bold text-gray-500 rounded">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            {note.type === 'audio-clip' && <Mic size={12} className="text-orange-500" />}
+                        </div>
+                        
+                        <h3 className="font-bold text-gray-900 text-sm mb-1.5 leading-snug group-hover:text-orange-700 transition-colors">
+                            {note.title}
+                        </h3>
+                        
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
+                            {note.content}
+                        </p>
+
+                        <div className="mt-3 pt-2 border-t border-gray-50 flex justify-between items-center">
+                            <span className="text-[10px] text-gray-400">{note.date}</span>
+                            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded text-gray-500 transition-all">
+                                <Maximize2 size={12} />
+                            </button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </ScrollArea>
+    </>
+  );
+
   return (
     <div className="flex flex-col h-screen bg-[#FAFAF9] font-sans text-[#1A1A1A] overflow-hidden selection:bg-orange-100 selection:text-orange-900">
-      {/* Brand Orb - Floating in top-left */}
       <BrandOrb />
       
-      {/* 1. Global Header (悬浮在顶部) */}
+      {/* 1. Global Header */}
       <header 
         ref={headerRef}
         className={cn(
@@ -337,6 +855,36 @@ export default function Studio() {
               {sourceCardId ? 'Context loaded from Agent Stream' : 'Context restored from Dashboard'}
             </motion.div>
           )}
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-1 mx-2 p-1 bg-gray-100/80 rounded-lg border border-gray-200/50">
+            <button
+              onClick={() => setWorkMode('read')}
+              className={cn(
+                "p-1.5 rounded-md transition-all flex items-center gap-2",
+                workMode === 'read' 
+                  ? "bg-white text-orange-600 shadow-sm ring-1 ring-black/5" 
+                  : "text-gray-400 hover:text-gray-600"
+              )}
+              title="Read Mode"
+            >
+              <BookOpen size={16} />
+              {workMode === 'read' && <span className="text-xs font-medium pr-1">Read</span>}
+            </button>
+            <button
+              onClick={() => setWorkMode('write')}
+              className={cn(
+                "p-1.5 rounded-md transition-all flex items-center gap-2",
+                workMode === 'write' 
+                  ? "bg-white text-orange-600 shadow-sm ring-1 ring-black/5" 
+                  : "text-gray-400 hover:text-gray-600"
+              )}
+              title="Write Mode"
+            >
+              <PenTool size={16} />
+              {workMode === 'write' && <span className="text-xs font-medium pr-1">Write</span>}
+            </button>
+          </div>
+
           {/* Panel Toggle Buttons */}
           <div className="flex items-center gap-1 mx-2 px-2 py-1 bg-white/50 rounded-lg border border-gray-200/50">
             <button
@@ -380,413 +928,50 @@ export default function Studio() {
         </div>
       </header>
 
-      {/* 2. Main Workspace (Flex Row Layout) */}
+      {/* 2. Main Workspace */}
       <main className="flex-1 flex gap-6 px-6 pb-6 overflow-hidden min-h-0">
         
-        {/* === Left Panel: Sources (Fixed Width) === */}
+        {/* === Left Panel === */}
         <motion.div
           initial={false}
           animate={{
-            width: showSources ? 280 : 0,
-            opacity: showSources ? 1 : 0,
-            marginRight: showSources ? 0 : -24,
+            width: workMode === 'read' ? (showSources ? 280 : 0) : 280,
+            opacity: workMode === 'read' ? (showSources ? 1 : 0) : 1,
+            marginRight: workMode === 'read' ? (showSources ? 0 : -24) : 0,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"
         >
-            {/* Panel Header */}
-            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 bg-white sticky top-0 z-10">
-                <h2 className="font-serif font-bold text-lg">Sources</h2>
-                <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-medium">
-                  {sources.filter(s => s.isSelected).length}/{sources.length}
-                </span>
-            </div>
-
-            {/* List */}
-            <ScrollArea className="flex-1">
-              <div className="p-3 space-y-1">
-                {sources.map(source => {
-                  const Icon = getSourceIcon(source.type);
-                  const isDragging = draggedSource?.id === source.id;
-                  const isHighlighted = highlightedSourceId === source.id;
-                  return (
-                    <motion.div 
-                      key={source.id}
-                      draggable
-                      onDragStart={handleDragStart(source)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => toggleSource(source.id)}
-                      animate={{
-                        backgroundColor: isHighlighted 
-                          ? 'rgba(255, 107, 0, 0.15)' 
-                          : source.isSelected 
-                            ? 'rgba(255, 243, 224, 0.5)' 
-                            : 'transparent',
-                        borderColor: isHighlighted 
-                          ? 'rgba(255, 107, 0, 0.4)' 
-                          : source.isSelected 
-                            ? 'rgba(255, 107, 0, 0.2)' 
-                            : 'transparent',
-                        scale: isHighlighted ? 1.02 : 1,
-                      }}
-                      transition={{
-                        duration: 0.2,
-                        repeat: isHighlighted ? Infinity : 0,
-                        repeatType: 'reverse' as const,
-                        repeatDuration: 0.5,
-                      }}
-                      className={cn(
-                        "group relative flex items-center gap-3 p-3 rounded-xl cursor-move transition-all duration-200 border",
-                        isDragging && 'opacity-50 scale-95'
-                      )}
-                    >
-                      <div className={cn(
-                        "transition-colors",
-                        source.isSelected ? 'text-orange-600' : 'text-gray-400 group-hover:text-gray-600'
-                      )}>
-                        <Icon size={18} />
-                      </div>
-                      <span className={cn(
-                        "text-sm truncate flex-1",
-                        source.isSelected ? 'font-medium text-gray-900' : 'text-gray-600'
-                      )}>
-                        {source.name}
-                      </span>
-                      {source.isSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>}
-                      {isHighlighted && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute inset-0 rounded-xl border-2 border-orange-400 pointer-events-none"
-                        />
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-
-            {/* Bottom Action */}
-            <div className="p-4 border-t border-gray-50/30">
-                <button className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium hover:bg-white hover:border-orange-200 hover:text-orange-600 hover:shadow-sm transition-all">
-                    <Plus size={16} /> Add Source
-                </button>
-            </div>
+            {workMode === 'read' ? renderSourcesPanelContent() : renderFileTreePanelContent()}
         </motion.div>
 
-        {/* === Center Panel: Chat / Canvas (Flexible) === */}
+        {/* === Center Panel === */}
         <motion.div
           initial={false}
           animate={{
-            maxWidth: !showSources && !showStudio ? '1200px' : 'none',
-            marginLeft: !showSources && !showStudio ? 'auto' : 0,
-            marginRight: !showSources && !showStudio ? 'auto' : 0,
+            flex: 1,
+            maxWidth: workMode === 'read' && !showSources && !showStudio ? '1200px' : 'none',
+            marginLeft: workMode === 'read' && !showSources && !showStudio ? 'auto' : 0,
+            marginRight: workMode === 'read' && !showSources && !showStudio ? 'auto' : 0,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex-1 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden relative"
         >
-             {/* Panel Header */}
-             <div className="h-16 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-50/30">
-                <div className="flex items-center gap-2">
-                    <Sparkles size={18} className="text-orange-500" />
-                    <span className="font-medium text-sm text-gray-500">AI Assistant</span>
-                </div>
-                <div className="flex gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
-                      <Clock size={18}/>
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
-                      <MoreHorizontal size={18}/>
-                    </button>
-                </div>
-            </div>
-
-            {/* Chat Content Area */}
-            <ScrollArea ref={scrollAreaRef} className="flex-1">
-              <div className="px-8 py-6 space-y-8 scroll-smooth" ref={chatContainerRef}>
-                {chatHistory.map(msg => (
-                  <motion.div
-                    key={msg.id}
-                    data-highlighted={msg.isHighlighted}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      y: 0,
-                      backgroundColor: msg.isHighlighted 
-                        ? 'rgba(254, 243, 199, 0.5)' 
-                        : 'transparent'
-                    }}
-                    transition={{ duration: 0.3 }}
-                    className={cn(
-                      "flex flex-col",
-                      msg.role === 'user' ? 'items-end' : 'items-start'
-                    )}
-                  >
-                    {msg.role === 'user' ? (
-                      <div className="bg-[#F4F4F2] px-6 py-4 rounded-2xl rounded-tr-sm text-gray-800 text-[15px] font-medium leading-relaxed max-w-[80%]">
-                        {msg.content}
-                      </div>
-                    ) : (
-                      <div className="max-w-[90%] pr-4 group">
-                        <div className="prose prose-slate max-w-none">
-                          <div className="font-serif text-[17px] leading-8 text-[#2C2C2C]">
-                            {msg.content.split('\n').map((line, i) => {
-                              // Check if line contains citations (e.g., "Q3 财报")
-                              const citationMatch = line.match(/Q3\s*财报|Q3\s*Financial\s*Report/i);
-                              const sourceId = citationMatch ? '1' : null; // Map to source ID
-                              
-                              // Extract percentages and key numbers for highlighting
-                              const percentageMatch = line.match(/(\d+%)/g);
-                              const parts = line.split(/(\d+%)/g);
-                              
-                              return (
-                                <div key={i} className="mb-4">
-                                  {line.startsWith('**') ? (
-                                    <strong className="block text-gray-900 font-bold font-serif text-lg mb-2 mt-6">
-                                      {line.replace(/\*\*/g, '')}
-                                    </strong>
-                                  ) : citationMatch ? (
-                                    <span
-                                      onMouseEnter={() => sourceId && setHighlightedSourceId(sourceId)}
-                                      onMouseLeave={() => setHighlightedSourceId(null)}
-                                      className="text-orange-600 underline decoration-orange-300 cursor-pointer hover:text-orange-700 transition-colors"
-                                    >
-                                      {parts.map((part, idx) => 
-                                        percentageMatch?.includes(part) ? (
-                                          <span key={idx} className="bg-orange-100 text-orange-900 px-1.5 py-0.5 rounded font-semibold">
-                                            {part}
-                                          </span>
-                                        ) : (
-                                          <span key={idx}>{part}</span>
-                                        )
-                                      )}
-                                    </span>
-                                  ) : percentageMatch ? (
-                                    <span>
-                                      {parts.map((part, idx) => 
-                                        percentageMatch.includes(part) ? (
-                                          <span key={idx} className="bg-orange-100 text-orange-900 px-1.5 py-0.5 rounded font-semibold">
-                                            {part}
-                                          </span>
-                                        ) : (
-                                          <span key={idx}>{part}</span>
-                                        )
-                                      )}
-                                    </span>
-                                  ) : (
-                                    <span>{line}</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        {/* Context Actions */}
-                        <div className="flex items-center gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1 bg-orange-50 px-2 py-1 rounded">
-                            <PenTool size={12}/> Save to Note
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-                <div className="h-24" ref={chatEndRef}></div>
-              </div>
-            </ScrollArea>
-
-            {/* Input Area - Absolute Positioning inside the Center Panel */}
-            <motion.div 
-              className={cn(
-                "absolute bottom-6",
-                isInputFloating ? "left-1/2 -translate-x-1/2 w-[600px]" : "left-6 right-6"
-              )}
-              animate={{
-                opacity: isInputFloating ? 0.9 : 1,
-              }}
-              transition={{ duration: 0.3 }}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-                <div className={cn(
-                  "bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] border flex items-center gap-2 ring-1 ring-black/5 transition-all",
-                  isDraggingOverInput 
-                    ? "border-orange-400 ring-orange-200 shadow-[0_8px_30px_rgba(255,107,0,0.2)] scale-105" 
-                    : "border-gray-100",
-                  isInputFloating && "backdrop-blur-md bg-white/90"
-                )}>
-                  {/* AI Thinking Indicator */}
-                  {isAIThinking && (
-                    <motion.div
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: 40, opacity: 1 }}
-                      exit={{ width: 0, opacity: 0 }}
-                      className="flex items-center gap-1.5 px-2"
-                    >
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 1, 0.5]
-                        }}
-                        transition={{ 
-                          duration: 1.5, 
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                        className="w-2 h-2 rounded-full bg-orange-500"
-                      />
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 1, 0.5]
-                        }}
-                        transition={{ 
-                          duration: 1.5, 
-                          repeat: Infinity,
-                          delay: 0.2,
-                          ease: "easeInOut"
-                        }}
-                        className="w-2 h-2 rounded-full bg-orange-500"
-                      />
-                      <motion.div
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 1, 0.5]
-                        }}
-                        transition={{ 
-                          duration: 1.5, 
-                          repeat: Infinity,
-                          delay: 0.4,
-                          ease: "easeInOut"
-                        }}
-                        className="w-2 h-2 rounded-full bg-orange-500"
-                      />
-                    </motion.div>
-                  )}
-                    <button className="w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex items-center justify-center transition-all flex-shrink-0">
-                        <Plus size={20} />
-                    </button>
-                    <input 
-                        ref={inputRef}
-                        type="text" 
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder={isDraggingOverInput ? "Drop file here to ask..." : "Ask anything..."} 
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-base text-gray-800 placeholder-gray-400 h-10 px-2"
-                    />
-                    <button 
-                        onClick={handleSend}
-                        disabled={!input.trim() || isAIThinking}
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0",
-                          input.trim() && !isAIThinking
-                            ? 'bg-black text-white hover:bg-gray-800 hover:scale-105' 
-                            : 'bg-gray-100 text-gray-300'
-                        )}
-                    >
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
-            </motion.div>
+             {workMode === 'read' ? renderChatContent(false) : renderEditorPanelContent()}
         </motion.div>
 
-        {/* === Right Panel: Studio (Fixed Width) === */}
+        {/* === Right Panel === */}
         <motion.div
           initial={false}
           animate={{
-            width: showStudio ? 340 : 0,
-            opacity: showStudio ? 1 : 0,
-            marginLeft: showStudio ? 0 : -24,
+            width: workMode === 'read' ? (showStudio ? 340 : 0) : 340,
+            opacity: workMode === 'read' ? (showStudio ? 1 : 0) : 1,
+            marginLeft: workMode === 'read' ? (showStudio ? 0 : -24) : 0,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"
         >
-            {/* Panel Header */}
-            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 sticky top-0 bg-white z-10">
-                <h2 className="font-serif font-bold text-lg">Studio</h2>
-                <div className="flex bg-gray-100 p-0.5 rounded-lg">
-                    <button 
-                        onClick={() => setViewMode('grid')}
-                        className={cn(
-                          "p-1.5 rounded-md transition-all",
-                          viewMode === 'grid' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'
-                        )}
-                    >
-                        <Grid size={14} />
-                    </button>
-                    <button 
-                        onClick={() => setViewMode('list')}
-                        className={cn(
-                          "p-1.5 rounded-md transition-all",
-                          viewMode === 'list' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400'
-                        )}
-                    >
-                        <List size={14} />
-                    </button>
-                </div>
-            </div>
-
-            {/* Tools Grid */}
-            <div className="px-5 py-4 border-b border-gray-50/30">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Create</span>
-                <div className="grid grid-cols-2 gap-2">
-                    <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-sm transition-all group">
-                         <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
-                            <Play size={12} fill="currentColor"/>
-                         </div>
-                         <span className="text-xs font-medium text-gray-700 group-hover:text-orange-700">Audio</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all group">
-                         <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                            <Layout size={12} />
-                         </div>
-                         <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700">Deck</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Notes List */}
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-3 bg-[#FAFAFA]">
-                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Recent Notes</span>
-                {notes.map(note => (
-                    <motion.div 
-                        key={note.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer group"
-                    >
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex gap-1">
-                                {note.tags.map(tag => (
-                                    <span key={tag} className="px-1.5 py-0.5 bg-gray-100 text-[9px] uppercase font-bold text-gray-500 rounded">
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                            {note.type === 'audio-clip' && <Mic size={12} className="text-orange-500" />}
-                        </div>
-                        
-                        <h3 className="font-bold text-gray-900 text-sm mb-1.5 leading-snug group-hover:text-orange-700 transition-colors">
-                            {note.title}
-                        </h3>
-                        
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
-                            {note.content}
-                        </p>
-
-                        <div className="mt-3 pt-2 border-t border-gray-50 flex justify-between items-center">
-                            <span className="text-[10px] text-gray-400">{note.date}</span>
-                            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded text-gray-500 transition-all">
-                                <Maximize2 size={12} />
-                            </button>
-                        </div>
-                    </motion.div>
-                ))}
-              </div>
-            </ScrollArea>
+            {workMode === 'read' ? renderNotesPanelContent() : renderChatContent(true)}
         </motion.div>
 
       </main>
