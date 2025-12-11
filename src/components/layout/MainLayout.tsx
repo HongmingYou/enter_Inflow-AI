@@ -12,7 +12,7 @@ export function MainLayout() {
       <FloatingDock />
       
       {/* Main Content Area */}
-      <div className="pl-32">
+      <div className="pl-16 sm:pl-20 md:pl-24">
         <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
