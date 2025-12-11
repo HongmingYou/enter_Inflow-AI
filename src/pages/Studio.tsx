@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll } from 'framer-motion';
 import { 
   FileText, 
   Mic, 
@@ -16,10 +16,15 @@ import {
   Clock,
   Settings,
   Plus,
-  Database
+  Database,
+  Bell,
+  PanelLeft,
+  PanelRight
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { BrandOrb } from '@/components/navigation/BrandOrb';
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs';
 
 interface DataSource {
   id: string;
@@ -114,8 +119,43 @@ export default function Studio() {
   const [notes, setNotes] = useState<Note[]>(MOCK_NOTES);
   const [input, setInput] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showSources, setShowSources] = useState(true);
+  const [showStudio, setShowStudio] = useState(true);
+  const [draggedSource, setDraggedSource] = useState<DataSource | null>(null);
+  const [isDraggingOverInput, setIsDraggingOverInput] = useState(false);
+  const [highlightedSourceId, setHighlightedSourceId] = useState<string | null>(null);
+  const [isInputFloating, setIsInputFloating] = useState(false);
+  const [isAIThinking, setIsAIThinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Track scroll for header border
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Track scroll in chat area for input floating
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+    if (!scrollArea) return;
+
+    const handleScroll = () => {
+      const { scrollTop } = scrollArea;
+      const isScrolled = scrollTop > 100;
+      setIsInputFloating(isScrolled);
+    };
+
+    scrollArea.addEventListener('scroll', handleScroll);
+    return () => scrollArea.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -190,9 +230,12 @@ export default function Studio() {
       content: input,
       timestamp: new Date()
     }]);
+    const userInput = input;
     setInput('');
+    setIsAIThinking(true);
     
     setTimeout(() => {
+      setIsAIThinking(false);
       setChatHistory(prev => [...prev, {
         id: (newMsgId + 1).toString(),
         role: 'assistant',
@@ -204,12 +247,47 @@ export default function Studio() {
         id: Date.now(),
         type: 'note',
         title: 'User Insight',
-        content: input,
+        content: userInput,
         tags: ['New'],
         date: 'Just now',
         isNew: true
       }, ...prev]);
     }, 800);
+  };
+
+  const handleDragStart = (source: DataSource) => (e: React.DragEvent) => {
+    setDraggedSource(source);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', source.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSource(null);
+    setIsDraggingOverInput(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDraggingOverInput(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDraggingOverInput(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOverInput(false);
+    
+    if (draggedSource) {
+      // Set input with document-based query
+      setInput(`基于 ${draggedSource.name}，`);
+      inputRef.current?.focus();
+      // Optionally auto-send or just focus input
+    }
+    
+    setDraggedSource(null);
   };
 
   const getSourceIcon = (type: DataSource['type']) => {
@@ -225,23 +303,31 @@ export default function Studio() {
     }
   };
 
+  // Mock breadcrumb data
+  const breadcrumbItems = [
+    { label: 'Workspace', path: '/app/workspace' },
+    { label: 'Project-001', path: '/app/workspace/project-001' },
+    { label: 'Q3 Financial Report' },
+  ];
+
   return (
-    <div className="flex flex-col h-screen bg-[#F2F1EE] font-sans text-[#1A1A1A] overflow-hidden selection:bg-orange-100 selection:text-orange-900">
+    <div className="flex flex-col h-screen bg-[#FAFAF9] font-sans text-[#1A1A1A] overflow-hidden selection:bg-orange-100 selection:text-orange-900">
+      {/* Brand Orb - Floating in top-left */}
+      <BrandOrb />
       
       {/* 1. Global Header (悬浮在顶部) */}
-      <header className="flex-shrink-0 h-16 flex items-center justify-between px-8 z-50 bg-[#F2F1EE]">
-        <div className="flex items-center gap-3">
-          <Link to="/app/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 bg-[#1A1A1A] text-white rounded-xl flex items-center justify-center font-serif font-bold italic shadow-lg">
-              N
-            </div>
-            <span className="font-semibold text-lg tracking-tight">Workbench</span>
-          </Link>
-          {workspaceId && workspaceId !== 'new' && (
-            <span className="text-sm text-gray-500">· {workspaceId}</span>
-          )}
+      <header 
+        ref={headerRef}
+        className={cn(
+          "flex-shrink-0 h-16 flex items-center justify-between px-8 z-40 transition-all duration-300",
+          "bg-white/60 backdrop-blur-md",
+          isScrolled && "border-b border-gray-200/50"
+        )}
+      >
+        <div className="flex items-center gap-6 ml-20">
+          <Breadcrumbs items={breadcrumbItems} />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {(cardId || msgId || sourceCardId) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -251,10 +337,40 @@ export default function Studio() {
               {sourceCardId ? 'Context loaded from Agent Stream' : 'Context restored from Dashboard'}
             </motion.div>
           )}
+          {/* Panel Toggle Buttons */}
+          <div className="flex items-center gap-1 mx-2 px-2 py-1 bg-white/50 rounded-lg border border-gray-200/50">
+            <button
+              onClick={() => setShowSources(!showSources)}
+              className={cn(
+                "p-1.5 rounded-md transition-all",
+                showSources 
+                  ? "bg-orange-50 text-orange-600" 
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+              )}
+              title={showSources ? "Hide Sources" : "Show Sources"}
+            >
+              <PanelLeft size={16} />
+            </button>
+            <button
+              onClick={() => setShowStudio(!showStudio)}
+              className={cn(
+                "p-1.5 rounded-md transition-all",
+                showStudio 
+                  ? "bg-orange-50 text-orange-600" 
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+              )}
+              title={showStudio ? "Hide Studio" : "Show Studio"}
+            >
+              <PanelRight size={16} />
+            </button>
+          </div>
           <button className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors">
-            <Settings size={20} />
+            <Bell size={18} />
           </button>
-          <div className="h-8 w-[1px] bg-gray-300 mx-1"></div>
+          <button className="p-2 text-gray-500 hover:bg-white/50 rounded-full transition-colors">
+            <Settings size={18} />
+          </button>
+          <div className="h-6 w-[1px] bg-gray-300/50 mx-1"></div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-md rounded-full border border-white/40 shadow-sm cursor-pointer hover:bg-white transition-all">
             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-orange-400 to-orange-600 flex items-center justify-center text-[10px] text-white font-bold">
               JD
@@ -268,9 +384,18 @@ export default function Studio() {
       <main className="flex-1 flex gap-6 px-6 pb-6 overflow-hidden min-h-0">
         
         {/* === Left Panel: Sources (Fixed Width) === */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
+        <motion.div
+          initial={false}
+          animate={{
+            width: showSources ? 280 : 0,
+            opacity: showSources ? 1 : 0,
+            marginRight: showSources ? 0 : -24,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"
+        >
             {/* Panel Header */}
-            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50 bg-white sticky top-0 z-10">
+            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 bg-white sticky top-0 z-10">
                 <h2 className="font-serif font-bold text-lg">Sources</h2>
                 <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-medium">
                   {sources.filter(s => s.isSelected).length}/{sources.length}
@@ -282,15 +407,37 @@ export default function Studio() {
               <div className="p-3 space-y-1">
                 {sources.map(source => {
                   const Icon = getSourceIcon(source.type);
+                  const isDragging = draggedSource?.id === source.id;
+                  const isHighlighted = highlightedSourceId === source.id;
                   return (
-                    <div 
+                    <motion.div 
                       key={source.id}
+                      draggable
+                      onDragStart={handleDragStart(source)}
+                      onDragEnd={handleDragEnd}
                       onClick={() => toggleSource(source.id)}
+                      animate={{
+                        backgroundColor: isHighlighted 
+                          ? 'rgba(255, 107, 0, 0.15)' 
+                          : source.isSelected 
+                            ? 'rgba(255, 243, 224, 0.5)' 
+                            : 'transparent',
+                        borderColor: isHighlighted 
+                          ? 'rgba(255, 107, 0, 0.4)' 
+                          : source.isSelected 
+                            ? 'rgba(255, 107, 0, 0.2)' 
+                            : 'transparent',
+                        scale: isHighlighted ? 1.02 : 1,
+                      }}
+                      transition={{
+                        duration: 0.2,
+                        repeat: isHighlighted ? Infinity : 0,
+                        repeatType: 'reverse' as const,
+                        repeatDuration: 0.5,
+                      }}
                       className={cn(
-                        "group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border",
-                        source.isSelected 
-                          ? 'bg-orange-50/50 border-orange-100/50' 
-                          : 'bg-transparent border-transparent hover:bg-gray-50'
+                        "group relative flex items-center gap-3 p-3 rounded-xl cursor-move transition-all duration-200 border",
+                        isDragging && 'opacity-50 scale-95'
                       )}
                     >
                       <div className={cn(
@@ -306,24 +453,40 @@ export default function Studio() {
                         {source.name}
                       </span>
                       {source.isSelected && <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>}
-                    </div>
+                      {isHighlighted && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute inset-0 rounded-xl border-2 border-orange-400 pointer-events-none"
+                        />
+                      )}
+                    </motion.div>
                   );
                 })}
               </div>
             </ScrollArea>
 
             {/* Bottom Action */}
-            <div className="p-4 border-t border-gray-50 bg-gray-50/30">
+            <div className="p-4 border-t border-gray-50/30">
                 <button className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm font-medium hover:bg-white hover:border-orange-200 hover:text-orange-600 hover:shadow-sm transition-all">
                     <Plus size={16} /> Add Source
                 </button>
             </div>
-        </div>
+        </motion.div>
 
         {/* === Center Panel: Chat / Canvas (Flexible) === */}
-        <div className="flex-1 flex flex-col bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden relative">
+        <motion.div
+          initial={false}
+          animate={{
+            maxWidth: !showSources && !showStudio ? '1200px' : 'none',
+            marginLeft: !showSources && !showStudio ? 'auto' : 0,
+            marginRight: !showSources && !showStudio ? 'auto' : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="flex-1 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden relative"
+        >
              {/* Panel Header */}
-             <div className="h-16 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-50">
+             <div className="h-16 flex-shrink-0 flex items-center justify-between px-8 border-b border-gray-50/30">
                 <div className="flex items-center gap-2">
                     <Sparkles size={18} className="text-orange-500" />
                     <span className="font-medium text-sm text-gray-500">AI Assistant</span>
@@ -339,7 +502,7 @@ export default function Studio() {
             </div>
 
             {/* Chat Content Area */}
-            <ScrollArea className="flex-1">
+            <ScrollArea ref={scrollAreaRef} className="flex-1">
               <div className="px-8 py-6 space-y-8 scroll-smooth" ref={chatContainerRef}>
                 {chatHistory.map(msg => (
                   <motion.div
@@ -367,17 +530,55 @@ export default function Studio() {
                       <div className="max-w-[90%] pr-4 group">
                         <div className="prose prose-slate max-w-none">
                           <div className="font-serif text-[17px] leading-8 text-[#2C2C2C]">
-                            {msg.content.split('\n').map((line, i) => (
-                              <div key={i} className="mb-4">
-                                {line.startsWith('**') ? (
-                                  <strong className="block text-gray-900 font-bold font-sans text-base mb-1 mt-4">
-                                    {line.replace(/\*\*/g, '')}
-                                  </strong>
-                                ) : (
-                                  <span>{line}</span>
-                                )}
-                              </div>
-                            ))}
+                            {msg.content.split('\n').map((line, i) => {
+                              // Check if line contains citations (e.g., "Q3 财报")
+                              const citationMatch = line.match(/Q3\s*财报|Q3\s*Financial\s*Report/i);
+                              const sourceId = citationMatch ? '1' : null; // Map to source ID
+                              
+                              // Extract percentages and key numbers for highlighting
+                              const percentageMatch = line.match(/(\d+%)/g);
+                              const parts = line.split(/(\d+%)/g);
+                              
+                              return (
+                                <div key={i} className="mb-4">
+                                  {line.startsWith('**') ? (
+                                    <strong className="block text-gray-900 font-bold font-serif text-lg mb-2 mt-6">
+                                      {line.replace(/\*\*/g, '')}
+                                    </strong>
+                                  ) : citationMatch ? (
+                                    <span
+                                      onMouseEnter={() => sourceId && setHighlightedSourceId(sourceId)}
+                                      onMouseLeave={() => setHighlightedSourceId(null)}
+                                      className="text-orange-600 underline decoration-orange-300 cursor-pointer hover:text-orange-700 transition-colors"
+                                    >
+                                      {parts.map((part, idx) => 
+                                        percentageMatch?.includes(part) ? (
+                                          <span key={idx} className="bg-orange-100 text-orange-900 px-1.5 py-0.5 rounded font-semibold">
+                                            {part}
+                                          </span>
+                                        ) : (
+                                          <span key={idx}>{part}</span>
+                                        )
+                                      )}
+                                    </span>
+                                  ) : percentageMatch ? (
+                                    <span>
+                                      {parts.map((part, idx) => 
+                                        percentageMatch.includes(part) ? (
+                                          <span key={idx} className="bg-orange-100 text-orange-900 px-1.5 py-0.5 rounded font-semibold">
+                                            {part}
+                                          </span>
+                                        ) : (
+                                          <span key={idx}>{part}</span>
+                                        )
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <span>{line}</span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                         {/* Context Actions */}
@@ -395,25 +596,92 @@ export default function Studio() {
             </ScrollArea>
 
             {/* Input Area - Absolute Positioning inside the Center Panel */}
-            <div className="absolute bottom-6 left-6 right-6">
-                <div className="bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center gap-2 ring-1 ring-black/5">
+            <motion.div 
+              className={cn(
+                "absolute bottom-6",
+                isInputFloating ? "left-1/2 -translate-x-1/2 w-[600px]" : "left-6 right-6"
+              )}
+              animate={{
+                opacity: isInputFloating ? 0.9 : 1,
+              }}
+              transition={{ duration: 0.3 }}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+                <div className={cn(
+                  "bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] border flex items-center gap-2 ring-1 ring-black/5 transition-all",
+                  isDraggingOverInput 
+                    ? "border-orange-400 ring-orange-200 shadow-[0_8px_30px_rgba(255,107,0,0.2)] scale-105" 
+                    : "border-gray-100",
+                  isInputFloating && "backdrop-blur-md bg-white/90"
+                )}>
+                  {/* AI Thinking Indicator */}
+                  {isAIThinking && (
+                    <motion.div
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 40, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      className="flex items-center gap-1.5 px-2"
+                    >
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="w-2 h-2 rounded-full bg-orange-500"
+                      />
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          delay: 0.2,
+                          ease: "easeInOut"
+                        }}
+                        className="w-2 h-2 rounded-full bg-orange-500"
+                      />
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          opacity: [0.5, 1, 0.5]
+                        }}
+                        transition={{ 
+                          duration: 1.5, 
+                          repeat: Infinity,
+                          delay: 0.4,
+                          ease: "easeInOut"
+                        }}
+                        className="w-2 h-2 rounded-full bg-orange-500"
+                      />
+                    </motion.div>
+                  )}
                     <button className="w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex items-center justify-center transition-all flex-shrink-0">
                         <Plus size={20} />
                     </button>
                     <input 
+                        ref={inputRef}
                         type="text" 
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask anything..." 
+                        placeholder={isDraggingOverInput ? "Drop file here to ask..." : "Ask anything..."} 
                         className="flex-1 bg-transparent border-none focus:ring-0 text-base text-gray-800 placeholder-gray-400 h-10 px-2"
                     />
                     <button 
                         onClick={handleSend}
-                        disabled={!input.trim()}
+                        disabled={!input.trim() || isAIThinking}
                         className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0",
-                          input.trim() 
+                          input.trim() && !isAIThinking
                             ? 'bg-black text-white hover:bg-gray-800 hover:scale-105' 
                             : 'bg-gray-100 text-gray-300'
                         )}
@@ -421,13 +689,22 @@ export default function Studio() {
                         <ArrowRight size={18} />
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
 
         {/* === Right Panel: Studio (Fixed Width) === */}
-        <div className="w-[340px] flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
+        <motion.div
+          initial={false}
+          animate={{
+            width: showStudio ? 340 : 0,
+            opacity: showStudio ? 1 : 0,
+            marginLeft: showStudio ? 0 : -24,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"
+        >
             {/* Panel Header */}
-            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50 sticky top-0 bg-white z-10">
+            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-50/30 sticky top-0 bg-white z-10">
                 <h2 className="font-serif font-bold text-lg">Studio</h2>
                 <div className="flex bg-gray-100 p-0.5 rounded-lg">
                     <button 
@@ -452,7 +729,7 @@ export default function Studio() {
             </div>
 
             {/* Tools Grid */}
-            <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/30">
+            <div className="px-5 py-4 border-b border-gray-50/30">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Create</span>
                 <div className="grid grid-cols-2 gap-2">
                     <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:border-orange-300 hover:shadow-sm transition-all group">
@@ -510,7 +787,7 @@ export default function Studio() {
                 ))}
               </div>
             </ScrollArea>
-        </div>
+        </motion.div>
 
       </main>
     </div>
