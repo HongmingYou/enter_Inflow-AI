@@ -154,6 +154,9 @@ export default function Studio() {
 
   // Track scroll in chat area for input floating
   useEffect(() => {
+    // Only used in read mode for the floating input interaction
+    if (workMode !== 'read') return;
+
     const scrollArea = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     if (!scrollArea) return;
 
@@ -831,7 +834,9 @@ export default function Studio() {
 
   return (
     <div className="flex flex-col h-screen bg-[#FAFAF9] font-sans text-[#1A1A1A] overflow-hidden selection:bg-orange-100 selection:text-orange-900">
-      <BrandOrb />
+      <Link to="/app/dashboard">
+        <BrandOrb />
+      </Link>
       
       {/* 1. Global Header */}
       <header 
@@ -935,9 +940,9 @@ export default function Studio() {
         <motion.div
           initial={false}
           animate={{
-            width: workMode === 'read' ? (showSources ? 280 : 0) : 280,
-            opacity: workMode === 'read' ? (showSources ? 1 : 0) : 1,
-            marginRight: workMode === 'read' ? (showSources ? 0 : -24) : 0,
+            width: showSources ? 280 : 0,
+            opacity: showSources ? 1 : 0,
+            marginRight: showSources ? 0 : -24,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"
@@ -950,7 +955,7 @@ export default function Studio() {
           initial={false}
           animate={{
             flex: 1,
-            maxWidth: workMode === 'read' && !showSources && !showStudio ? '1200px' : 'none',
+            maxWidth: workMode === 'read' && !showSources && !showStudio ? '1200px' : '100%',
             marginLeft: workMode === 'read' && !showSources && !showStudio ? 'auto' : 0,
             marginRight: workMode === 'read' && !showSources && !showStudio ? 'auto' : 0,
           }}
@@ -964,9 +969,9 @@ export default function Studio() {
         <motion.div
           initial={false}
           animate={{
-            width: workMode === 'read' ? (showStudio ? 340 : 0) : 340,
-            opacity: workMode === 'read' ? (showStudio ? 1 : 0) : 1,
-            marginLeft: workMode === 'read' ? (showStudio ? 0 : -24) : 0,
+            width: showStudio ? 340 : 0,
+            opacity: showStudio ? 1 : 0,
+            marginLeft: showStudio ? 0 : -24,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex-shrink-0 flex flex-col bg-white rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-50/50 overflow-hidden"

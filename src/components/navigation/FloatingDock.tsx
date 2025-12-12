@@ -76,7 +76,7 @@ export function FloatingDock() {
             </div>
 
             {/* Middle - Core Navigation */}
-            <div className="flex flex-col items-center gap-2.5 w-full px-3 flex-1">
+            <div className="flex flex-col items-center w-full px-3 flex-1 justify-start gap-3">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -128,7 +128,7 @@ export function FloatingDock() {
             </div>
 
             {/* Bottom - Utilities & User */}
-            <div className="flex flex-col items-center gap-2.5 w-full px-3 mt-auto">
+            <div className="flex flex-col items-center gap-3 w-full px-3 mt-auto">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.button
